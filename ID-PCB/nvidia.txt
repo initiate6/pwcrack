@@ -1,0 +1,22 @@
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Video\{673C2605-D393-4901-8F88-D831210C628D}\0000]
+"ProviderName"="NVIDIA"
+"DriverDesc"="NVIDIA GeForce GTX 560 "
+"HardwareInformation.AdapterString"="GeForce GTX 560"
+"HardwareInformation.ChipType"="GeForce GTX 560"
+"HardwareInformation.qwMemorySize"=hex(b):00,00,fb,3f,00,00,00,00
+"HardwareInformation.MemorySize"=dword:3ffb0000
+"Device Description"="NVIDIA GeForce GTX 560 "
+"DriverDateData"=hex:00,00,ea,de,46,20,ce,01
+"DriverDate"="3-14-2013"
+"DriverVersion"="9.18.13.1422"
+
+
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Video\{673C2605-D393-4901-8F88-D831210C628D}\0001]
+"InfPath"="oem12.inf"
+"InfSection"="Section022"
+"ProviderName"="NVIDIA"
+"DriverDateData"=hex:00,00,ea,de,46,20,ce,01
+"DriverDate"="3-14-2013"
+"DriverVersion"="9.18.13.1422"
