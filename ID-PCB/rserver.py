@@ -14,6 +14,10 @@ def main():
         irc.send(ircCMD +'#'+ msg + '\r\n')
     def join(channel):
         irc.send('JOIN #%s \r\n' % channel)
+
+    #initialize the database with tables.
+    createDB()
+    
         
     network = 'irc.init6.me'
     chan = 'pwcrack'
@@ -47,62 +51,77 @@ def main():
             bits = clientData[3]
             cpuCores = clientData[4]
             gpuType = clientData[5]
-            addclient(clientID, system, bits, cpuCores, gpuType)
+            email = str('.'.join(clientData[6:8])).strip('\r\n')
+            addclient(clientID, system, bits, cpuCores, gpuType, email)
         
         print data
-        msg('PRIVMSG', chan, ".update")
+        
+        #msg('PRIVMSG', chan, ".update")
     
 def createDB():
        
     conn = sqlite3.connect('pwcrack.db')
-    c = conn.cursor()
+    cur = conn.cursor()
 
     #create table clients and data names/types 
-    c.execute('''CREATE TABLE IF NOT EXISTS clients
-                 (clientID text, system text, bits text, Threads text, gpuType text)''') 
+    cur.execute('''CREATE TABLE IF NOT EXISTS clients
+                 (clientID text, system text, bits text, Threads text, gpuType text, email text)''') 
 
     #create table algorithms and data names/types 
-    c.execute('''CREATE TABLE IF NOT EXISTS algorithms
-                 (algorithm text, AMD-accel text, AMD-loops text, NV-accel text, NV-loops text)''')
+    cur.execute('''CREATE TABLE IF NOT EXISTS algorithms
+                 (algorithm text, AMDaccel text, AMDloops text, NVaccel text, NVloops text)''')
 
     #create a table completed. track all clients and the command they excuted and if it finished or cutoff.
     #Add support down the line for how many recoverd. 
-    c.execute('''CREATE TABLE IF NOT EXISTS completed
+    cur.execute('''CREATE TABLE IF NOT EXISTS completed
                  (clientID text, completed text, command text)''')
 
     conn.commit()
-    c.close()
+    cur.close()
     conn.close()
         
     
-def addclient(clientID, system, bits, cpuCores, gpuType):
+def addclient(clientID, system, bits, cpuCores, gpuType, email):
         
     conn = sqlite3.connect('pwcrack.db')
-    c = conn.cursor()
-    #lookup clientID in database to see if it exist if not add client.
+    cur = conn.cursor()
 
-    for row in c.execute("SELECT * FROM clients"):
-        if clientID not in row[0]:
+    #Needs at least one client in the database for this to work. Need to check if rows = null if so just add client. 
+    #lookup clientID in database to see if it exist if not add client.
+    cur.execute("SELECT * FROM clients")
+    rows = cur.fetchall()
+    for row in rows:
+        if re.match(clientID,row[0]) == None:
+            cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?)", (clientID, system, bits, cpuCores, gpuType, email))
+            print row
+
+        else:
+            print "Client already in database"
+            print row
+
             
 
     
+    conn.commit()
+    cur.close()
+    conn.close()
 
-
+#temp function for debuging.             
+def printdatabase():
     
-    c.execute("INSERT INTO clients VALUES (clientID, system, bits, cpuCores, gpuType)")
+    conn = sqlite3.connect('pwcrack.db')
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM clients")
+
+    rows = cur.fetchall()
+
+    for row in rows:
+        if re.match('CID_2990_734',row[0]):
+            print row
     
-
-
-
-def LoadAlgorithms():
+ 
+#def LoadAlgorithms():
     
-
-
-
-
-
-
-
 
 
 

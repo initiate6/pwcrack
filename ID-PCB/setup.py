@@ -11,14 +11,16 @@ import random
 
 def main():
     system = platform.system()
-
+    #email = raw_input("What is your e-mail address incase your client disconnects? ")
+    email = "init6@init6.me"
+    
     if system == 'Windows':
         bits = checkBits()
         cpuInfo = winGetCPUinfo()
         gpuInfo = winGetGPUinfo()
         ramInfo = winGetRAMinfo()
         ClientID = getClientID( system, bits, cpuInfo, gpuInfo, ramInfo )
-        writeit(ClientID, system, bits, cpuInfo, gpuInfo, ramInfo)
+        writeit(ClientID, system, bits, cpuInfo, gpuInfo, ramInfo, email)
         
     if system == 'Linux':
         bits = checkBits()
@@ -27,8 +29,16 @@ def main():
         bits = checkBits()
 
 #write info to a file for client.py to read later.
-def writeit( ClientID, system, bits, cpuInfo, gpuInfo, ramInfo ):
+def writeit( ClientID, system, bits, cpuInfo, gpuInfo, ramInfo, email ):
     cpuCount = 0
+    gpuType = "None"
+    if re.search('AMD|ATI', gpuInfo[0]) != None:
+        gpuType = "ocl"
+    elif re.search('nvidia', gpuInfo[0]) != None:
+        gpuType = "cuda"
+    else:
+        gpuType = "None"
+                   
     f = open('sysinfo', 'w')
     f.write(ClientID+'\n')
     f.write('system.'+system+'\n')
@@ -39,9 +49,11 @@ def writeit( ClientID, system, bits, cpuInfo, gpuInfo, ramInfo ):
         f.write('\n')
         cpuCount += 1
     f.write('cpuCount.'+str(cpuCount)+'\n')
+    f.write('gpuType.'+gpuType+'\n')
     f.write('gpu.'+gpuInfo[0]+'\n')
     f.write('gpuDriver.'+gpuInfo[1]+'\n')
     f.write('ram.'+str(ramInfo)+'\n')
+    f.write('email.'+email+'\n')
     f.close()
     
 #Checks if system is 64bit.

@@ -20,8 +20,10 @@ def main():
             bits = line.split('.')[1]
         if re.match("^cpuCount\.",line):
             threads = int(line.split('.')[1])
-        if re.match("^gpu\.",line):
+        if re.match("^gpuType\.",line):
             gpu = line.split('.')[1]
+        if re.match("^email\.",line):
+            email = '.'.join(line.split('.')[1:])
             
     chan1 = 'pwc'+ '_'.join(nick.split('_')[1:])
     print chan1
@@ -30,8 +32,9 @@ def main():
     print bits
     print threads
     print gpu
+    print email
 
-    connect(network, nick, chan, chan1, port, system, bits, threads, gpu)
+    connect(network, nick, chan, chan1, port, system, bits, threads, gpu, email)
     
 def readsysinfo():
     try:
@@ -41,7 +44,7 @@ def readsysinfo():
     except IOError as e:
         print("({0})".format(e))
         
-def connect(network, nick, chan, chan1, port, system, bits, threads, gpu):
+def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, email):
     #not sure why I needed to included the import socket here as well??
     import socket, string, time, ssl
     import urllib, re, os
@@ -56,7 +59,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu):
     irc.send('JOIN #%s\r\n' % chan)
     print irc.recv(4096)
     irc.send('JOIN #%s\r\n' % chan1)
-    msg = '!ready.'+nick+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu
+    msg = '!ready.'+nick+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+email
     irc.send('PRIVMSG #%s %s\r\n' % (chan,msg))
 	
     while True:
