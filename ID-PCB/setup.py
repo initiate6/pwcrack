@@ -1,5 +1,5 @@
 # Gather info about the computer and save to file for client.py.
-# Only have to run ginfo.py one time on each computer. 
+# Only have to run setup.py one time on each computer. 
 
 import platform
 import sys
