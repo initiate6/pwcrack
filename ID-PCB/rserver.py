@@ -54,8 +54,19 @@ def main():
             email = str('.'.join(clientData[6:8])).strip('\r\n')
             state = "ready"
             addclient(clientID, state, system, bits, cpuCores, gpuType, email)
+        if data.find('!busy') != -1:
+            clientData = data.split('.')[1:]
+            clientID = clientData[1]
+            system = clientData[2]
+            bits = clientData[3]
+            cpuCores = clientData[4]
+            gpuType = clientData[5]
+            email = str('.'.join(clientData[6:8])).strip('\r\n')
+            state = "busy"
+            busyclient(clientID, state, system, bits, cpuCores, gpuType, email)
+            
         
-        print data
+        #print data
         
         #msg('PRIVMSG', chan, ".update")
     
@@ -82,47 +93,72 @@ def createDB():
     conn.close()
         
     
-def addclient(clientID, state, system, bits, cpuCores, gpuType, email):
+def busyclient(clientID, state, system, bits, cpuCores, gpuType, email):
+
+    try:
         
-    conn = sqlite3.connect('pwcrack.db')
+        conn = sqlite3.connect('pwcrack.db')
 
-    with conn:
-        cur = conn.cursor()
+        with conn:
 
-        #Needs at least one client in the database for this to work. Need to check if rows = null if so just add client. 
-        #lookup clientID in database to see if it exist if not add client.
-        cur.execute("SELECT * FROM clients")
-        rows = cur.fetchall()
-        for row in rows:
-            if re.match(clientID,row[0]) == None:
-                cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, email))
-                print row
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM clients")
+            rows = cur.fetchall()
+                
+            for row in rows:
+                if re.match(clientID,row[0]):
+                    cur.execute("UPDATE clients SET state=? WHERE clientID=?",(state, clientID))
+                    print row
 
+    except sqlite3.Error, e:
+        print "Error %s:" % e.args[0]
+        sys.exit(1)
+
+    finally:
+        if conn:
+            conn.close()
+
+def addclient(clientID, state, system, bits, cpuCores, gpuType, email):
+
+    try:
+        
+        clients = []
+        states = []
+        conn = sqlite3.connect('pwcrack.db')
+
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM clients")
+            rows = cur.fetchall()
+            #if table is empty no clients have been added go ahead and add client. 
+            if not rows:
+               cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, email)) 
+
+            #Creates a list of all clients then it checks to see if current client is in database if not adds it. if so prints error msg.
             else:
-                print "Client already in database"
-                print row
+                for row in rows:
+                    clients.append(row[0])
+                    states.append(row[1])
+                    
+                if clientID not in clients:
+                    cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, email))
+                    print row
 
-            
+                elif "busy" in states:
+                    cur.execute("UPDATE clients SET state=? WHERE clientID=?",(state, clientID))
+                else:
+                    print "Client already in database"
+                    print row
 
+    except sqlite3.Error, e:
+        print "Error %s:" % e.args[0]
+        sys.exit(1)
+
+    finally:
+        if conn:
+            conn.close()
     
-    #conn.commit()
-    #cur.close()
-    #conn.close()
-
-#temp function for debuging.             
-def printdatabase():
-    
-    conn = sqlite3.connect('pwcrack.db')
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM clients")
-
-    rows = cur.fetchall()
-
-    for row in rows:
-        if re.match('CID_2990_734',row[0]):
-            print row
-    
- 
+#LOTS OF WORK TO BE DONE HERE!!!!! 
 def LoadAlgorithms():
 #algorithm, mcode, AMDaccel, AMDloops, NVaccel, NVloops
     
