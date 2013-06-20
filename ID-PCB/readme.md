@@ -11,7 +11,7 @@ setup.py:
 * If something is wrong notify how to fix it. 
 * Check to see if hashcat is located on computer if not download what is required based on computer. # TODO
 * #TODO get info on linux and osx.
-* #TODO ask user for e-mail address so we can get a hold of them if the client drops off.
+* Ask user for e-mail address so we can get a hold of them if the client drops off.
 
 
 client.py:
