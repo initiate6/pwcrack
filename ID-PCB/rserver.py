@@ -52,7 +52,8 @@ def main():
             cpuCores = clientData[4]
             gpuType = clientData[5]
             email = str('.'.join(clientData[6:8])).strip('\r\n')
-            addclient(clientID, system, bits, cpuCores, gpuType, email)
+            state = "ready"
+            addclient(clientID, state, system, bits, cpuCores, gpuType, email)
         
         print data
         
@@ -65,46 +66,48 @@ def createDB():
 
     #create table clients and data names/types 
     cur.execute('''CREATE TABLE IF NOT EXISTS clients
-                 (clientID text, system text, bits text, Threads text, gpuType text, email text)''') 
+                 (clientID text, state, system text, bits text, Threads text, gpuType text, email text)''') 
 
     #create table algorithms and data names/types 
     cur.execute('''CREATE TABLE IF NOT EXISTS algorithms
-                 (algorithm text, AMDaccel text, AMDloops text, NVaccel text, NVloops text)''')
+                 (algorithm text, mcode text, AMDaccel text, AMDloops text, NVaccel text, NVloops text)''')
 
     #create a table completed. track all clients and the command they excuted and if it finished or cutoff.
     #Add support down the line for how many recoverd. 
     cur.execute('''CREATE TABLE IF NOT EXISTS completed
                  (clientID text, completed text, command text)''')
-
+    
     conn.commit()
     cur.close()
     conn.close()
         
     
-def addclient(clientID, system, bits, cpuCores, gpuType, email):
+def addclient(clientID, state, system, bits, cpuCores, gpuType, email):
         
     conn = sqlite3.connect('pwcrack.db')
-    cur = conn.cursor()
 
-    #Needs at least one client in the database for this to work. Need to check if rows = null if so just add client. 
-    #lookup clientID in database to see if it exist if not add client.
-    cur.execute("SELECT * FROM clients")
-    rows = cur.fetchall()
-    for row in rows:
-        if re.match(clientID,row[0]) == None:
-            cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?)", (clientID, system, bits, cpuCores, gpuType, email))
-            print row
+    with conn:
+        cur = conn.cursor()
 
-        else:
-            print "Client already in database"
-            print row
+        #Needs at least one client in the database for this to work. Need to check if rows = null if so just add client. 
+        #lookup clientID in database to see if it exist if not add client.
+        cur.execute("SELECT * FROM clients")
+        rows = cur.fetchall()
+        for row in rows:
+            if re.match(clientID,row[0]) == None:
+                cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, email))
+                print row
+
+            else:
+                print "Client already in database"
+                print row
 
             
 
     
-    conn.commit()
-    cur.close()
-    conn.close()
+    #conn.commit()
+    #cur.close()
+    #conn.close()
 
 #temp function for debuging.             
 def printdatabase():
@@ -120,12 +123,38 @@ def printdatabase():
             print row
     
  
-#def LoadAlgorithms():
+def LoadAlgorithms():
+#algorithm, mcode, AMDaccel, AMDloops, NVaccel, NVloops
     
 
+    hashtypes = (
+        ('md5', '-m 0', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('md5($pass.$salt)', '-m 10', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('md5($salt.$pass)', '-m 20', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('md5(unicode($pass).$salt)', '-m 30', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('md5($salt.unicode($pass))', '-m 40', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('sha1', '-m 100', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('sha1($pass.$salt)', '-m 110', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('sha1($salt.$pass)', '-m 120', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('sha1(unicode($pass).$salt)', '-m 130', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('sha1($salt.unicode($pass))', '-m 140', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('MySQL', '-m 300', '-n 256', '-u 1024', '-n 256', '-u 1024'),
+        ('phpass,MD5(wordpress),md5(phpBB3)', '-m 400', '-n 256', '-u 1000', '-n 256', '-u 1000'),
+        ('md5crypt', '-m 500', '-n 80', '-u 1000', '-n 80', '-u 1000'),
+        ('md4', '-m 900', '-n 160', '-u 1024', '-n 160', '-u 1024'),
+        ('NTLM', '-m 1000', '-n 160', '-u 1024', '-n 160', '-u 1024'),
+    )
 
+    conn = sqlite3.connect('pwcrack.db')
 
+    with con:
 
+        cur = coon.cursor()
+
+        cur.execute("DROP TABLE IF EXISTS algorithms")
+        cur.execute('''CREATE TABLE IF NOT EXISTS algorithms
+                     (algorithm text, mcode text, AMDaccel text, AMDloops text, NVaccel text, NVloops text)''')
+        cur.executemany("INSERT INTO algorithms VALUES(?, ? , ?, ?, ?, ?)", hashtypes)
 
 
 
