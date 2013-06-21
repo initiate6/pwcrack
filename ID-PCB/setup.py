@@ -21,6 +21,7 @@ def main():
         ramInfo = winGetRAMinfo()
         ClientID = getClientID( system, bits, cpuInfo, gpuInfo, ramInfo )
         writeit(ClientID, system, bits, cpuInfo, gpuInfo, ramInfo, email)
+        download(ClientID, system, bits, gpuInfo)
         
     if system == 'Linux':
         bits = checkBits()
@@ -32,12 +33,13 @@ def main():
 def writeit( ClientID, system, bits, cpuInfo, gpuInfo, ramInfo, email ):
     cpuCount = 0
     gpuType = "None"
-    if re.search('AMD|ATI', gpuInfo[0]) != None:
-        gpuType = "ocl"
-    elif re.search('nvidia', gpuInfo[0]) != None:
-        gpuType = "cuda"
-    else:
-        gpuType = "None"
+    if gpuInfo:
+        if re.search('AMD|ATI', gpuInfo[0]):
+            gpuType = "ocl"
+        elif re.search('nvidia', gpuInfo[0]):
+            gpuType = "cuda"
+        else:
+            gpuType = "None"
                    
     f = open('sysinfo', 'w')
     f.write(ClientID+'\n')
@@ -49,9 +51,15 @@ def writeit( ClientID, system, bits, cpuInfo, gpuInfo, ramInfo, email ):
         f.write('\n')
         cpuCount += 1
     f.write('cpuCount.'+str(cpuCount)+'\n')
-    f.write('gpuType.'+gpuType+'\n')
-    f.write('gpu.'+gpuInfo[0]+'\n')
-    f.write('gpuDriver.'+gpuInfo[1]+'\n')
+    if gpuInfo:
+        f.write('gpuType.'+gpuType+'\n')
+        f.write('gpu.'+gpuInfo[0]+'\n')
+        f.write('gpuDriver.'+gpuInfo[1]+'\n')
+    if not gpuInfo:
+        f.write('gpuType.'+gpuType+'\n')
+        f.write('gpu.'+gpuType+'\n')
+        f.write('gpuDriver.'+gpuType+'\n')
+        
     f.write('ram.'+str(ramInfo)+'\n')
     f.write('email.'+email+'\n')
     f.close()
@@ -149,7 +157,7 @@ def winGetGPUinfo():
                 break
             
         #Checks to see if GPUinfo has a value if so continues else return None.
-        if not GPUinfo == False:
+        if not GPUinfo:
             #check driver is compatible with HashCat if so return GPUinfo else return None.
             if checkDriver(GPUinfo) == True:
                 return GPUinfo
@@ -165,11 +173,11 @@ def winGetGPUinfo():
 #checks to see if GPU driver is compatible with HashCat  
 def checkDriver(gpuDriver):
     try:
-        if re.search('AMD|ATI', gpuDriver[0]) != None:
+        if re.search('AMD|ATI', gpuDriver[0]):
             if gpuDriver[1] == "13.1":
                 return True
 
-        elif re.search('nvidia', gpuDriver[0]) != None:
+        elif re.search('nvidia', gpuDriver[0]):
             if gpuDriver[1] == "9.18.13.1422":
                 return True            
 
@@ -210,11 +218,12 @@ def getClientID( system, bits, cpuInfo, gpuInfo, ramInfo ):
     rampts = (ramInfo/1024) * 20
     points += int(rampts)
 
-    gpuPts = gpuLookup(gpuInfo[0])
-    points += int(gpuPts)
+    if gpuInfo:
+        gpuPts = gpuLookup(gpuInfo[0])
+        points += int(gpuPts)
 
-    gpuRamPts = gpuInfo[2] * 2
-    points += int(gpuRamPts)
+        gpuRamPts = gpuInfo[2] * 2
+        points += int(gpuRamPts)
 
     rand = random.randint(0,999)
     return ("CID"+"_"+str(points)+"_"+str(rand))
@@ -223,24 +232,94 @@ def getClientID( system, bits, cpuInfo, gpuInfo, ramInfo ):
 def gpuLookup(card):
     points = 0
     try:
-        if re.search('AMD|ATI', card) != None:
-            if re.search('ATI', card) != None:
+        if re.search('AMD|ATI', card):
+            if re.search('ATI', card):
                 if card == "ATI Radeon HD 4250":
                     points = 100
                 elif card == "string":
                     points = 100
-            if re.search('AMD', card) != None:
-                if re.search('7/d/d/d', card) != None:
+            if re.search('AMD', card):
+                if re.search('7/d/d/d', card):
                     points = 7000
-                if re.search('6/d/d/d', card) != None:
+                if re.search('6/d/d/d', card):
                     points = 6000
 
-        if re.search('nvidia', card) != None:
+        if re.search('nvidia', card):
             points = 1000
             
         return points
     
     except:
         print "GPU not in LookUp table"            
+
+
+def download(ClientID, system, bits, gpuInfo):
+    import urllib2
+
+    def saveit(filename):
+        f = open(str(filename),'w')
+        f.write(filename.read())
+        f.close()        
         
+    
+    gpuType = "None"
+    if gpuInfo:
+        if re.search('AMD|ATI', gpuInfo[0]) != None:
+            gpuType = "ocl"
+        elif re.search('nvidia', gpuInfo[0]) != None:
+            gpuType = "cuda"
+        else:
+            gpuType = "None"
+
+    if system == "Windows":
+        if gpuType == "ocl":
+            if bits == "32bits":
+                winOCL32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.32bit.7z")
+                saveit(winOCL32bit)
+                    
+            elif bits == "64bits":
+                winOCL62bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.62bit.7z")
+
+        if gpuType == "cuda":
+            if bits == "32bits":
+                winCUDA32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.cuda.32bit.7z")
+
+            elif bits == "64bits":
+                winCUDA64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.cuda.64bit.7z")
+
+        if gpuType == "None":
+            if bits == "32bits":
+                winHC32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.hashcat.32bit.7z")
+
+            elif bits == "64bits":
+                winHC64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.hashcat.64bit.7z")
+                
+    if system == "Linux":
+        if gpuType == "ocl":
+            if bits == "32bits":
+                linOCL32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.32bit.7z")
+
+            elif bits == "64bits":
+                linOCL62bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.62bit.7z")
+
+        if gpuType == "cuda":
+            if bits == "32bits":
+                linCUDA32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.cuda.32bit.7z")
+
+            elif bits == "64bits":
+                linCUDA64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.cuda.64bit.7z")
+
+        if gpuType == "None":
+            if bits == "32bits":
+                linHC32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.hashcat.32bit.7z")
+
+            elif bits == "64bits":
+                linHC64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.hashcat.64bit.7z")
+        
+    if system == "Darwin":
+        print "nothing here"
+
+
+
+    
 main()

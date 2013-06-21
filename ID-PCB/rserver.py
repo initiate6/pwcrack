@@ -87,7 +87,10 @@ def createDB():
     #Add support down the line for how many recoverd. 
     cur.execute('''CREATE TABLE IF NOT EXISTS completed
                  (clientID text, completed text, command text)''')
-    
+
+    #BruteForce Table. Start=one char for client to start on. charset full charset 
+    cur.execute('''CREATE TABLE IF NOT EXISTS bftable
+                 (start text, charset text)''')    
     conn.commit()
     cur.close()
     conn.close()
@@ -193,9 +196,27 @@ def LoadAlgorithms():
         cur.executemany("INSERT INTO algorithms VALUES(?, ? , ?, ?, ?, ?)", hashtypes)
 
 
+#TODO add support to send new charset from IRC. 
+def LoadBFtable():
 
+    charset = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.? /ñ"
+    bftable = []
 
+    for char in charset:
+        bftable.append( (char, charset) )
+     
+    conn = sqlite3.connect('pwcrack.db')
+    cur = conn.cursor()
+
+    with conn:
+        #BruteForce Table. Start=one char for client to start on. charset full charset.
+        cur.execute("DROP TABLE IF EXISTS bftable")
+        cur.execute('''CREATE TABLE IF NOT EXISTS bftable
+                     (start text, charset text)''')    
+
+        cur.executemany("INSERT INTO bftable VALUES(?, ?)", bftable)
 
 
     
+ 
 main()

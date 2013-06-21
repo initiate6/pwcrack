@@ -1,0 +1,13 @@
+CID_2990_734
+system.Windows
+bits.64bit
+cpu.0.AMD Phenom(tm) II X4 975 Processor.3616
+cpu.1.AMD Phenom(tm) II X4 975 Processor.3616
+cpu.2.AMD Phenom(tm) II X4 975 Processor.3616
+cpu.3.AMD Phenom(tm) II X4 975 Processor.3616
+cpuCount.4
+gpuType.ocl
+gpu.ATI Radeon HD 4250
+gpuDriver.13.1
+ram.3839
+email.init6@init6.me
