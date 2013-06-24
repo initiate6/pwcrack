@@ -25,6 +25,7 @@ def main():
         
     if system == 'Linux':
         bits = checkBits()
+        cpuInfo = 
 
     if system == 'Darwin':
         bits = checkBits()
@@ -77,7 +78,6 @@ def winGetRAMinfo():
     try:
         from winmem import winmem
         m = winmem()
-        #print '%d MB physical RAM.' %(m.dwTotalPhys/1024**2)
         return m.dwTotalPhys/1024**2
     
     except:
@@ -256,9 +256,10 @@ def gpuLookup(card):
 def download(ClientID, system, bits, gpuInfo):
     import urllib2
 
-    def saveit(filename):
-        f = open(str(filename),'w')
-        f.write(filename.read())
+    def saveit(filename, fileobj):
+        print "this is the file name %s" % filename
+        f = open(filename,'w')
+        f.write(fileobj.read())
         f.close()        
         
     
@@ -273,49 +274,60 @@ def download(ClientID, system, bits, gpuInfo):
 
     if system == "Windows":
         if gpuType == "ocl":
-            if bits == "32bits":
+            if bits == "32bit":
                 winOCL32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.32bit.7z")
-                saveit(winOCL32bit)
+                saveit('winOCL32bit.7z', winOCL32bit)
                     
-            elif bits == "64bits":
-                winOCL62bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.62bit.7z")
-
+            elif bits == "64bit":
+                winOCL64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.64bit.7z")
+                saveit('winOCL64bit.7z', winOCL64bit)
+                
         if gpuType == "cuda":
-            if bits == "32bits":
+            if bits == "32bit":
                 winCUDA32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.cuda.32bit.7z")
-
-            elif bits == "64bits":
+                saveit('winCUDA32bit.7z', winCUDA32bit)
+                
+            elif bits == "64bit":
                 winCUDA64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.cuda.64bit.7z")
-
+                saveit('winCuda64bit.7z', winCUDA64bit)
+                
         if gpuType == "None":
-            if bits == "32bits":
+            if bits == "32bit":
                 winHC32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.hashcat.32bit.7z")
-
-            elif bits == "64bits":
+                saveit('winHC32bit.7z', winHC32bit)
+                
+            elif bits == "64bit":
                 winHC64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.hashcat.64bit.7z")
+                saveit('winHC32bit.7z', winHC64bit)
                 
     if system == "Linux":
         if gpuType == "ocl":
-            if bits == "32bits":
+            if bits == "32bit":
                 linOCL32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.32bit.7z")
-
-            elif bits == "64bits":
-                linOCL62bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.62bit.7z")
-
+                saveit('linOCL32bit.7z', linOCL32bit)
+                
+            elif bits == "64bit":
+                linOCL64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.64bit.7z")
+                saveit('linOCL64bit.7z', linOCL64bit)
+                
         if gpuType == "cuda":
-            if bits == "32bits":
+            if bits == "32bit":
                 linCUDA32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.cuda.32bit.7z")
-
-            elif bits == "64bits":
+                saveit('linCUDA32bit.7z', linCUDA32bit)
+                
+            elif bits == "64bit":
                 linCUDA64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.cuda.64bit.7z")
-
+                saveit('linCUDA64bit.7z', linCUDA64bit)
+                
         if gpuType == "None":
-            if bits == "32bits":
+            if bits == "32bit":
                 linHC32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.hashcat.32bit.7z")
-
-            elif bits == "64bits":
+                saveit('linHC32bit.7z', linHC32bit)
+                
+            elif bits == "64bit":
                 linHC64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.hashcat.64bit.7z")
-        
+                saveit('linHC64bit.7z', linHC64bit)
+                
     if system == "Darwin":
         print "nothing here"
 
