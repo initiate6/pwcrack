@@ -3,7 +3,7 @@
 
 import platform
 import sys
-import _winreg
+
 import string
 import struct
 import re
@@ -15,6 +15,7 @@ def main():
     email = "init6@init6.me"
     
     if system == 'Windows':
+        import _winreg
         bits = checkBits()
         cpuInfo = winGetCPUinfo()
         gpuInfo = winGetGPUinfo()
@@ -24,11 +25,14 @@ def main():
         download(ClientID, system, bits, gpuInfo)
         
     if system == 'Linux':
+        import subprocess
         bits = checkBits()
-        cpuInfo = 
+	cpuInfo = linGetCPUinfo()
+        ramInfo = linGetRAMinfo()
+	gpuInfo = linGetGPUinfo()        
 
     if system == 'Darwin':
-        bits = checkBits()
+        print "Not supported at this time"
 
 #write info to a file for client.py to read later.
 def writeit( ClientID, system, bits, cpuInfo, gpuInfo, ramInfo, email ):
@@ -182,7 +186,7 @@ def checkDriver(gpuDriver):
                 return True            
 
         else:
-            print "Your GPU driver for "+gpuDriver[0]+" is " + gpuDriver[1] + " and needs to be upgraded or downgraded to match oclhashcat requirements"
+            print "Your GPU driver for  %s is %s and needs to be upgraded or downgraded to match oclhashcat requirements" % (gpuDriver[0] , gpuDriver[1] )
             
     except:
         print "Something went wrong while checking GPU driver version." 
@@ -254,84 +258,223 @@ def gpuLookup(card):
 
 
 def download(ClientID, system, bits, gpuInfo):
-    import urllib2
-
-    def saveit(filename, fileobj):
-        print "this is the file name %s" % filename
-        f = open(filename,'w')
-        f.write(fileobj.read())
-        f.close()        
+    try:
         
-    
-    gpuType = "None"
-    if gpuInfo:
-        if re.search('AMD|ATI', gpuInfo[0]) != None:
-            gpuType = "ocl"
-        elif re.search('nvidia', gpuInfo[0]) != None:
-            gpuType = "cuda"
-        else:
-            gpuType = "None"
+        import urllib2
 
-    if system == "Windows":
-        if gpuType == "ocl":
-            if bits == "32bit":
-                winOCL32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.32bit.7z")
-                saveit('winOCL32bit.7z', winOCL32bit)
+        def saveit(filename, fileobj):
+            print "this is the file name %s" % filename
+            f = open(filename,'w')
+            f.write(fileobj.read())
+            f.close()        
+            
+        
+        gpuType = "None"
+        if gpuInfo:
+            if re.search('AMD|ATI', gpuInfo[0]) != None:
+                gpuType = "ocl"
+            elif re.search('nvidia', gpuInfo[0]) != None:
+                gpuType = "cuda"
+            else:
+                gpuType = "None"
+
+        if system == "Windows":
+            if gpuType == "ocl":
+                if bits == "32bit":
+                    winOCL32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.32bit.7z")
+                    saveit('winOCL32bit.7z', winOCL32bit)
+                        
+                elif bits == "64bit":
+                    winOCL64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.64bit.7z")
+                    saveit('winOCL64bit.7z', winOCL64bit)
                     
-            elif bits == "64bit":
-                winOCL64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.64bit.7z")
-                saveit('winOCL64bit.7z', winOCL64bit)
-                
-        if gpuType == "cuda":
-            if bits == "32bit":
-                winCUDA32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.cuda.32bit.7z")
-                saveit('winCUDA32bit.7z', winCUDA32bit)
-                
-            elif bits == "64bit":
-                winCUDA64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.cuda.64bit.7z")
-                saveit('winCuda64bit.7z', winCUDA64bit)
-                
-        if gpuType == "None":
-            if bits == "32bit":
-                winHC32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.hashcat.32bit.7z")
-                saveit('winHC32bit.7z', winHC32bit)
-                
-            elif bits == "64bit":
-                winHC64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.hashcat.64bit.7z")
-                saveit('winHC32bit.7z', winHC64bit)
-                
-    if system == "Linux":
-        if gpuType == "ocl":
-            if bits == "32bit":
-                linOCL32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.32bit.7z")
-                saveit('linOCL32bit.7z', linOCL32bit)
-                
-            elif bits == "64bit":
-                linOCL64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.64bit.7z")
-                saveit('linOCL64bit.7z', linOCL64bit)
-                
-        if gpuType == "cuda":
-            if bits == "32bit":
-                linCUDA32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.cuda.32bit.7z")
-                saveit('linCUDA32bit.7z', linCUDA32bit)
-                
-            elif bits == "64bit":
-                linCUDA64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.cuda.64bit.7z")
-                saveit('linCUDA64bit.7z', linCUDA64bit)
-                
-        if gpuType == "None":
-            if bits == "32bit":
-                linHC32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.hashcat.32bit.7z")
-                saveit('linHC32bit.7z', linHC32bit)
-                
-            elif bits == "64bit":
-                linHC64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.hashcat.64bit.7z")
-                saveit('linHC64bit.7z', linHC64bit)
-                
-    if system == "Darwin":
-        print "nothing here"
+            if gpuType == "cuda":
+                if bits == "32bit":
+                    winCUDA32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.cuda.32bit.7z")
+                    saveit('winCUDA32bit.7z', winCUDA32bit)
+                    
+                elif bits == "64bit":
+                    winCUDA64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.cuda.64bit.7z")
+                    saveit('winCuda64bit.7z', winCUDA64bit)
+                    
+            if gpuType == "None":
+                if bits == "32bit":
+                    winHC32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.hashcat.32bit.7z")
+                    saveit('winHC32bit.7z', winHC32bit)
+                    
+                elif bits == "64bit":
+                    winHC64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.hashcat.64bit.7z")
+                    saveit('winHC32bit.7z', winHC64bit)
+                    
+        if system == "Linux":
+            if gpuType == "ocl":
+                if bits == "32bit":
+                    linOCL32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.32bit.7z")
+                    saveit('linOCL32bit.7z', linOCL32bit)
+                    
+                elif bits == "64bit":
+                    linOCL64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.64bit.7z")
+                    saveit('linOCL64bit.7z', linOCL64bit)
+                    
+            if gpuType == "cuda":
+                if bits == "32bit":
+                    linCUDA32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.cuda.32bit.7z")
+                    saveit('linCUDA32bit.7z', linCUDA32bit)
+                    
+                elif bits == "64bit":
+                    linCUDA64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.cuda.64bit.7z")
+                    saveit('linCUDA64bit.7z', linCUDA64bit)
+                    
+            if gpuType == "None":
+                if bits == "32bit":
+                    linHC32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.hashcat.32bit.7z")
+                    saveit('linHC32bit.7z', linHC32bit)
+                    
+                elif bits == "64bit":
+                    linHC64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.hashcat.64bit.7z")
+                    saveit('linHC64bit.7z', linHC64bit)
+                    
+        if system == "Darwin":
+            print "nothing here"
 
+    except:
+        print "something went wrong downloading the files"
 
-
+############
+#
+#LINUX FUNCTIONS
+#
+############
     
+def linGetGPUinfo():
+    import subprocess
+
+    def checkamddriver():
+        clinfo_process = subprocess.Popen(['clinfo'], 
+                                                            stdout=subprocess.PIPE)
+        grep1_process = subprocess.Popen(['grep', 'Driver version'],
+                                                            stdin=clinfo_process.stdout,
+                                                            stdout=subprocess.PIPE)
+        cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
+                                                            stdin=grep1_process.stdout,
+                                                            stdout=subprocess.PIPE)
+                                                            
+        amddriveroutput = cut_process.communicate()[0] 
+        amdDriver = float(amddriveroutput.split()[0])
+        if amdDriver == 1084.4:
+            return str(amdDriver)
+        else:
+            return "None"
+            
+    
+    def checknvdriver():
+        
+        clinfo_process = subprocess.Popen(['clinfo'], 
+                                                            stdout=subprocess.PIPE)
+        grep1_process = subprocess.Popen(['grep', 'Driver version'],
+                                                            stdin=clinfo_process.stdout,
+                                                            stdout=subprocess.PIPE)
+        cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
+                                                            stdin=grep1_process.stdout,
+                                                            stdout=subprocess.PIPE)
+                                                            
+        nvdriveroutput = cut_process.communicate()[0] 
+        nvDriver = float(nvdriveroutput.split()[0]) 
+        if nvDriver >= 310.32:
+            return str(nvDriver)
+        else:
+            return "None"
+	
+    def getdevicename(device):
+        _,_,rest = device.partition('\[') 
+        result,_,_ = rest.partition('\]')
+        return result
+        
+        
+    lspci_process = subprocess.Popen(['lspci'], 
+                                                            stdout=subprocess.PIPE)
+    grep_process = subprocess.Popen(['grep', 'VGA'],
+                                                            stdin=lspci_process.stdout,
+                                                            stdout=subprocess.PIPE)
+    stdoutdata = grep_process.communicate()[0] 
+    
+    vcDevices = []
+    for item in stdoutdata.split('\n'):
+        vcDevices.append(item)
+        
+    for device in vcDevices:
+        if re.search('AMD|ATI', device):
+            amddriver = checkamddriver()
+            gpuType = "ocl" 
+            deviceName = getdevicename(device)
+            print gpuType, deviceName,  amddriver
+            
+        elif re.search('NVIDIA', device):
+            nvdriver = checknvdriver()
+            gpuType = "cuda"
+            
+        else:
+            gpudriver = "None"
+            gpuType = "None"
+            
+
+def linGetCPUinfo():
+    import subprocess
+    cpuInfo = []
+
+    cat_process = subprocess.Popen(['cat', '/proc/cpuinfo'],
+                                                                stdout=subprocess.PIPE)
+
+    grep_process = subprocess.Popen(['grep', 'processor\|name\|MHz'],
+                                                        stdin=cat_process.stdout,
+                                                        stdout=subprocess.PIPE)
+
+    cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
+			                        stdin=grep_process.stdout,
+						stdout=subprocess.PIPE)
+
+
+    stdoutdata = cut_process.communicate()[0]
+		
+    temp = []
+    for item in stdoutdata.split('\n'):
+        temp.append(item.strip())
+	
+    temp2 = [temp[x:x+3] for x in range(0, len(temp),3)]
+		
+    for list in temp2:
+        cpuInfo.append('.'.join(list))
+		
+    last = cpuInfo.pop()
+    if last == '':
+	print cpuInfo
+        return cpuInfo
+    else:
+        cpuInfo.append(last)
+	print cpuInfo
+        return cpuInfo
+
+
+def linGetRAMinfo():
+    import subprocess
+    cat_process = subprocess.Popen(['cat', '/proc/meminfo'], 
+							stdout=subprocess.PIPE)
+
+    grep_process = subprocess.Popen(['grep', 'MemTotal'], 
+							stdin=cat_process.stdout, 
+							stdout=subprocess.PIPE)
+
+    awk_process = subprocess.Popen(['awk', '{print $2}'], 
+							stdin=grep_process.stdout, 
+							stdout=subprocess.PIPE)
+
+
+    stdoutdata = awk_process.communicate()[0]
+    ramsize = int(stdoutdata) / 1024 / 1024
+    print "ram size in GB %s" % ramsize
+    return ramsize
+
+ 
+ 
+ 
 main()
