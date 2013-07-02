@@ -3,19 +3,23 @@
 
 import platform
 import sys
-
 import string
 import struct
 import re
 import random
 
+system = platform.system()
+if system == 'Windows':
+    import _winreg
+if system == 'Linux':
+    import subprocess
+
 def main():
-    system = platform.system()
+    
     #email = raw_input("What is your e-mail address incase your client disconnects? ")
     email = "init6@init6.me"
     
     if system == 'Windows':
-        import _winreg
         bits = checkBits()
         cpuInfo = winGetCPUinfo()
         gpuInfo = winGetGPUinfo()
@@ -25,7 +29,6 @@ def main():
         download(ClientID, system, bits, gpuInfo)
         
     if system == 'Linux':
-        import subprocess
         bits = checkBits()
 	cpuInfo = linGetCPUinfo()
         ramInfo = linGetRAMinfo()
@@ -77,7 +80,8 @@ def checkBits():
     else:
         return "32bit"
 
-#get RAM info on WIndows Computers. Some lock up python.exe but finish.    
+#get RAM info on WIndows Computers. Some lock up python.exe but finish.
+#change to winshell thingy
 def winGetRAMinfo():
     try:
         from winmem import winmem
