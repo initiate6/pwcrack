@@ -48,7 +48,33 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, email)
     #not sure why I needed to included the import socket here as well??
     import socket, string, time, ssl
     import urllib, re, os
+    from async_subprocess import AsyncPopen, PIPE
         
+    def command(cmd):
+	clientID = cmd[0].strip(':')
+	cmdline = ' '.join(cmd[1:])
+	print cmdline
+	#send irc.send(!busy to update server with client status)
+	#excute command on PC
+	#Need to repace the args with the vars.  
+	args = ("hashcat-cli32.exe", "-m 100", "-a 3", "-n 2", "A0.M100.hash", "?a?a?a?a?a")
+	process = AsyncPopen(args,
+                            stdin=PIPE,
+                            stdout=PIPE,
+                            stderr=PIPE
+                            )
+	retcode = process.poll()
+	while retcode == None:
+		stdoutdata, stderrdata = process.communicate('\n')
+		if stderrdata:
+			print stderrdata # switch to irc.send(stderrdata) and throw error
+		if stdoutdata:
+			print stdoutdata # switch to irc.send(stdoutdata) to update room. 
+		time.sleep(5) #in seconds
+		retcode = process.poll()
+
+    
+    	
     socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     socket.connect((network,port))
     irc = ssl.wrap_socket(socket)
@@ -76,10 +102,6 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, email)
             command(cmd)
         print data
 
-def command(cmd):
-    clientID = cmd[0].strip(':')
-    cmdline = ' '.join(cmd[1:])
-    print cmdline
-    #excute command on PC     
+    
     
 main()

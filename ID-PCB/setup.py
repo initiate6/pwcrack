@@ -22,33 +22,30 @@ def main():
     if system == 'Windows':
         bits = checkBits()
         cpuInfo = winGetCPUinfo()
-        gpuInfo = winGetGPUinfo()
+        gpuType, gpuDesc, gpuDriver, gpuMem = winGetGPUinfo()
         ramInfo = winGetRAMinfo()
-        ClientID = getClientID( system, bits, cpuInfo, gpuInfo, ramInfo )
-        writeit(ClientID, system, bits, cpuInfo, gpuInfo, ramInfo, email)
-        download(ClientID, system, bits, gpuInfo)
+        ClientID = getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ramInfo )
+        writeit(ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, email)
+        #downloads don't work because I haven't uploaded all the packages yet
+	#download(ClientID, system, bits, gpuType)
         
     if system == 'Linux':
         bits = checkBits()
 	cpuInfo = linGetCPUinfo()
         ramInfo = linGetRAMinfo()
-	gpuInfo = linGetGPUinfo()        
+	gpuType, gpuDesc, gpuDriver, gpuMem = linGetGPUinfo()  
+	ClientID = getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ramInfo )
+	writeit(ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, email)
+	#downloads don't work because I haven't uploaded all the packages yet
+	#download(ClientID, system, bits, gpuType
+	      
 
     if system == 'Darwin':
         print "Not supported at this time"
 
 #write info to a file for client.py to read later.
-def writeit( ClientID, system, bits, cpuInfo, gpuInfo, ramInfo, email ):
-    cpuCount = 0
-    gpuType = "None"
-    if gpuInfo:
-        if re.search('AMD|ATI', gpuInfo[0]):
-            gpuType = "ocl"
-        elif re.search('nvidia', gpuInfo[0]):
-            gpuType = "cuda"
-        else:
-            gpuType = "None"
-                   
+def writeit( ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, email ):
+    cpuCount = 0            
     f = open('sysinfo', 'w')
     f.write(ClientID+'\n')
     f.write('system.'+system+'\n')
@@ -59,15 +56,10 @@ def writeit( ClientID, system, bits, cpuInfo, gpuInfo, ramInfo, email ):
         f.write('\n')
         cpuCount += 1
     f.write('cpuCount.'+str(cpuCount)+'\n')
-    if gpuInfo:
-        f.write('gpuType.'+gpuType+'\n')
-        f.write('gpu.'+gpuInfo[0]+'\n')
-        f.write('gpuDriver.'+gpuInfo[1]+'\n')
-    if not gpuInfo:
-        f.write('gpuType.'+gpuType+'\n')
-        f.write('gpu.'+gpuType+'\n')
-        f.write('gpuDriver.'+gpuType+'\n')
-        
+    
+    f.write('gpuType.'+str(gpuType)+'\n')
+    f.write('gpu.'+str(gpuDesc)+'\n')
+    f.write('gpuDriver.'+str(gpuDriver)+'\n')   
     f.write('ram.'+str(ramInfo)+'\n')
     f.write('email.'+email+'\n')
     f.close()
@@ -115,8 +107,11 @@ def winGetCPUinfo():
 
 #Get GPU info on Windows computers.
 def winGetGPUinfo():
-    GPUinfo = []
-
+    #GPUinfo = []
+    #gpuDesc = ''
+    #amdCatalystVer = ''
+    #gpuMem = ''
+    #nvDriverVer = ''
     try:
         hHardwareReg = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "HARDWARE")
         hDeviceMapReg = _winreg.OpenKey(hHardwareReg, "DEVICEMAP")
@@ -139,21 +134,22 @@ def winGetGPUinfo():
                             
                             #check if its a AMD/ATI card and if so return detailed info.
                             if re.search('AMD|ATI', str(VideoCardDescription)) != None:
-                                GPUinfo.append(VideoCardDescription)
+                                gpuDesc = str(VideoCardDescription)
                                 amdCatalystVer = _winreg.QueryValueEx(hVideoCardReg, "Catalyst_Version")[0]
-                                GPUinfo.append(amdCatalystVer)
                                 VideoCardMemorySize = _winreg.QueryValueEx(hVideoCardReg,"HardwareInformation.MemorySize")[0]
-                                GPUinfo.append(VideoCardMemorySize / 1024 / 1024)
+                                gpuMem = str(VideoCardMemorySize / 1024 / 1024)
+                                gpuType = "ocl"
                                 done = True 
                         
                         
                             #check if its a Nvidia card and if so return detailed info.
                             elif re.search('nvidia', str(VideoCardDescription)) != None:
-                                GPUinfo.append(VideoCardDescription)
+                                gpuDesc(VideoCardDescription)
                                 nvDriverVer = _winreg.QueryValueEx(hVideoCardReg, "DriverVersion")[0]
                                 GPUinfo.append(nvDriverVer)
                                 VideoCardMemorySize = _winreg.QueryValueEx(hVideoCardReg,"HardwareInformation.MemorySize")[0]
-                                GPUinfo.append(VideoCardMemorySize / 1024 / 1024)
+                                gpuMem(VideoCardMemorySize / 1024 / 1024)
+                                gpuType = "cuda"
                                 done = True
 
             #breaks to step out of for loops once done.                                        
@@ -164,39 +160,28 @@ def winGetGPUinfo():
             if done == True:
                 break
             
-        #Checks to see if GPUinfo has a value if so continues else return None.
-        if not GPUinfo:
-            #check driver is compatible with HashCat if so return GPUinfo else return None.
-            if checkDriver(GPUinfo) == True:
-                return GPUinfo
+        #checks if gpu driver is good and return info
+        if re.search('AMD|ATI', gpuDesc):
+            if amdCatalystVer == '13.1':
+                return gpuType, gpuDesc, amdCatalystVer, VideoCardMemorySize
             else:
-                return None
+                print "Your GPU driver for  %s is %s and needs to be upgraded or downgraded to match oclhashcat requirements 13.1" % ( gpuDesc, amdCatalystVer )
+                return None, None, None, None
+            
+        elif re.search('nvidia', gpuDesc):
+            if float(nvDriverVer) >= float(310.02):
+                return gpuType, gpuDesc, nvDriverVer, VideoCardMemorySize
+            else:
+                print "Your GPU driver for  %s is %s and needs to be upgraded or downgraded to match oclhashcat requirements 13.1" % ( gpuDesc, nvDriverVer )
+                return None, None, None, None
         else:
-            return None
-        
+            return None, None, None, None
+     
     except WindowsError:
         print "Cannot Retrieve Graphics Card Name and Memory Size!"
 
-
-#checks to see if GPU driver is compatible with HashCat  
-def checkDriver(gpuDriver):
-    try:
-        if re.search('AMD|ATI', gpuDriver[0]):
-            if gpuDriver[1] == "13.1":
-                return True
-
-        elif re.search('nvidia', gpuDriver[0]):
-            if gpuDriver[1] == "9.18.13.1422":
-                return True            
-
-        else:
-            print "Your GPU driver for  %s is %s and needs to be upgraded or downgraded to match oclhashcat requirements" % (gpuDriver[0] , gpuDriver[1] )
-            
-    except:
-        print "Something went wrong while checking GPU driver version." 
-
     
-def getClientID( system, bits, cpuInfo, gpuInfo, ramInfo ):
+def getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ramInfo ):
     #system = windows = 50, Linux = 100, OSX = 10
     #64bit = 50pts 32bit = 20pts
     #CPUcores = 150pts per core
@@ -226,11 +211,11 @@ def getClientID( system, bits, cpuInfo, gpuInfo, ramInfo ):
     rampts = (ramInfo/1024) * 20
     points += int(rampts)
 
-    if gpuInfo:
-        gpuPts = gpuLookup(gpuInfo[0])
+    if gpuDesc:
+        gpuPts = gpuLookup(gpuDesc)
         points += int(gpuPts)
 
-        gpuRamPts = gpuInfo[2] * 2
+        gpuRamPts = gpuMem * 2
         points += int(gpuRamPts)
 
     rand = random.randint(0,999)
@@ -261,7 +246,7 @@ def gpuLookup(card):
         print "GPU not in LookUp table"            
 
 
-def download(ClientID, system, bits, gpuInfo):
+def download(ClientID, system, bits, gpuType):
     try:
         
         import urllib2
@@ -273,15 +258,6 @@ def download(ClientID, system, bits, gpuInfo):
             f.close()        
             
         
-        gpuType = "None"
-        if gpuInfo:
-            if re.search('AMD|ATI', gpuInfo[0]) != None:
-                gpuType = "ocl"
-            elif re.search('nvidia', gpuInfo[0]) != None:
-                gpuType = "cuda"
-            else:
-                gpuType = "None"
-
         if system == "Windows":
             if gpuType == "ocl":
                 if bits == "32bit":
@@ -351,55 +327,69 @@ def download(ClientID, system, bits, gpuInfo):
 ############
     
 def linGetGPUinfo():
-    import subprocess
+
+    def getGpuMemory():
+        clinfo_process = subprocess.Popen(['clinfo'], 
+                                            stdout=subprocess.PIPE)
+        
+        grep1_process = subprocess.Popen(['grep', 'Max memory allocation'],
+                                            stdin=clinfo_process.stdout,
+                                            stdout=subprocess.PIPE)
+        cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
+                                            stdin=grep1_process.stdout,
+                                            stdout=subprocess.PIPE)
+                                                            
+        gpuMem = cut_process.communicate()[0] 
+        gpuMem = int(gpuMem.split()[0]) / 1024 / 1024
+	return str(gpuMem)
 
     def checkamddriver():
         clinfo_process = subprocess.Popen(['clinfo'], 
-                                                            stdout=subprocess.PIPE)
+                                            stdout=subprocess.PIPE)
+        
         grep1_process = subprocess.Popen(['grep', 'Driver version'],
-                                                            stdin=clinfo_process.stdout,
-                                                            stdout=subprocess.PIPE)
+                                            stdin=clinfo_process.stdout,
+                                            stdout=subprocess.PIPE)
         cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
-                                                            stdin=grep1_process.stdout,
-                                                            stdout=subprocess.PIPE)
+                                            stdin=grep1_process.stdout,
+                                            stdout=subprocess.PIPE)
                                                             
         amddriveroutput = cut_process.communicate()[0] 
         amdDriver = float(amddriveroutput.split()[0])
         if amdDriver == 1084.4:
             return str(amdDriver)
         else:
-            return "None"
+            return None
             
     
     def checknvdriver():
         
         clinfo_process = subprocess.Popen(['clinfo'], 
-                                                            stdout=subprocess.PIPE)
+                                            stdout=subprocess.PIPE)
         grep1_process = subprocess.Popen(['grep', 'Driver version'],
-                                                            stdin=clinfo_process.stdout,
-                                                            stdout=subprocess.PIPE)
+                                            stdin=clinfo_process.stdout,
+                                            stdout=subprocess.PIPE)
         cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
-                                                            stdin=grep1_process.stdout,
-                                                            stdout=subprocess.PIPE)
+                                            stdin=grep1_process.stdout,
+                                            stdout=subprocess.PIPE)
                                                             
         nvdriveroutput = cut_process.communicate()[0] 
         nvDriver = float(nvdriveroutput.split()[0]) 
         if nvDriver >= 310.32:
             return str(nvDriver)
         else:
-            return "None"
+            return None
 	
     def getdevicename(device):
-        _,_,rest = device.partition('\[') 
-        result,_,_ = rest.partition('\]')
-        return result
+        result = device.split(':')
+	return result[len(result)-1]
         
         
     lspci_process = subprocess.Popen(['lspci'], 
-                                                            stdout=subprocess.PIPE)
+                                        stdout=subprocess.PIPE)
     grep_process = subprocess.Popen(['grep', 'VGA'],
-                                                            stdin=lspci_process.stdout,
-                                                            stdout=subprocess.PIPE)
+                                        stdin=lspci_process.stdout,
+                                        stdout=subprocess.PIPE)
     stdoutdata = grep_process.communicate()[0] 
     
     vcDevices = []
@@ -411,15 +401,22 @@ def linGetGPUinfo():
             amddriver = checkamddriver()
             gpuType = "ocl" 
             deviceName = getdevicename(device)
-            print gpuType, deviceName,  amddriver
+	    gpuMem = getGpuMemory()
+            return gpuType, deviceName,  amddriver, gpuMem
             
         elif re.search('NVIDIA', device):
             nvdriver = checknvdriver()
             gpuType = "cuda"
+	    deviceName = getdevicename(device)
+	    gpuMem = getGpuMemory()
+	    return gpuType, deviceName,  nvdriver, gpuMem
             
         else:
-            gpudriver = "None"
-            gpuType = "None"
+            gpudriver = None
+            gpuType = None
+	    deviceName = None
+	    gpuMem = None
+	    return gpuType, deviceName,  gpudriver, gpuMem
             
 
 def linGetCPUinfo():
@@ -427,15 +424,15 @@ def linGetCPUinfo():
     cpuInfo = []
 
     cat_process = subprocess.Popen(['cat', '/proc/cpuinfo'],
-                                                                stdout=subprocess.PIPE)
+                                        stdout=subprocess.PIPE)
 
     grep_process = subprocess.Popen(['grep', 'processor\|name\|MHz'],
-                                                        stdin=cat_process.stdout,
-                                                        stdout=subprocess.PIPE)
+                                        stdin=cat_process.stdout,
+                                        stdout=subprocess.PIPE)
 
     cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
-			                        stdin=grep_process.stdout,
-						stdout=subprocess.PIPE)
+		            stdin=grep_process.stdout,
+		            stdout=subprocess.PIPE)
 
 
     stdoutdata = cut_process.communicate()[0]
@@ -451,31 +448,31 @@ def linGetCPUinfo():
 		
     last = cpuInfo.pop()
     if last == '':
-	print cpuInfo
+	#print cpuInfo
         return cpuInfo
     else:
         cpuInfo.append(last)
-	print cpuInfo
+	#print cpuInfo
         return cpuInfo
 
 
 def linGetRAMinfo():
     import subprocess
     cat_process = subprocess.Popen(['cat', '/proc/meminfo'], 
-							stdout=subprocess.PIPE)
+					stdout=subprocess.PIPE)
 
     grep_process = subprocess.Popen(['grep', 'MemTotal'], 
-							stdin=cat_process.stdout, 
-							stdout=subprocess.PIPE)
+					stdin=cat_process.stdout, 
+					stdout=subprocess.PIPE)
 
     awk_process = subprocess.Popen(['awk', '{print $2}'], 
-							stdin=grep_process.stdout, 
-							stdout=subprocess.PIPE)
+					stdin=grep_process.stdout, 
+					stdout=subprocess.PIPE)
 
 
     stdoutdata = awk_process.communicate()[0]
     ramsize = int(stdoutdata) / 1024 / 1024
-    print "ram size in GB %s" % ramsize
+    #print "ram size in GB %s" % ramsize
     return ramsize
 
  

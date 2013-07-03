@@ -1,13 +1,11 @@
-CID_2154_660
-system.Windows
+CID_128818_966
+system.Linux
 bits.64bit
-cpu.0.AMD Phenom(tm) II X4 975 Processor.3616
-cpu.1.AMD Phenom(tm) II X4 975 Processor.3616
-cpu.2.AMD Phenom(tm) II X4 975 Processor.3616
-cpu.3.AMD Phenom(tm) II X4 975 Processor.3616
-cpuCount.4
-gpuType.None
-gpu.None
-gpuDriver.None
-ram.3839
+cpu.0.AMD E-350 Processor.1600.000
+cpu.1.AMD E-350 Processor.800.000
+cpuCount.2
+gpuType.ocl
+gpu. ATI Technologies Inc AMD Radeon HD 6310 GraphicsATI
+gpuDriver.1084.4
+ram.3
 email.init6@init6.me
