@@ -25,7 +25,8 @@ def main():
         gpuType, gpuDesc, gpuDriver, gpuMem = winGetGPUinfo()
         ramInfo = winGetRAMinfo()
         ClientID = getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ramInfo )
-        writeit(ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, email)
+        password = getPassword( ClientID, system, bits, gpuType )
+        writeit(ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, password, email)
         #downloads don't work because I haven't uploaded all the packages yet
 	#download(ClientID, system, bits, gpuType)
         
@@ -35,7 +36,8 @@ def main():
         ramInfo = linGetRAMinfo()
 	gpuType, gpuDesc, gpuDriver, gpuMem = linGetGPUinfo()  
 	ClientID = getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ramInfo )
-	writeit(ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, email)
+        password = getPassword( ClientID, system, bits, gpuType )
+	writeit(ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, password, email)
 	#downloads don't work because I haven't uploaded all the packages yet
 	#download(ClientID, system, bits, gpuType
 	      
@@ -44,7 +46,7 @@ def main():
         print "Not supported at this time"
 
 #write info to a file for client.py to read later.
-def writeit( ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, email ):
+def writeit( ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, password, email ):
     cpuCount = 0            
     f = open('sysinfo', 'w')
     f.write(ClientID+'\n')
@@ -61,6 +63,7 @@ def writeit( ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramIn
     f.write('gpu.'+str(gpuDesc)+'\n')
     f.write('gpuDriver.'+str(gpuDriver)+'\n')   
     f.write('ram.'+str(ramInfo)+'\n')
+    f.write('pass.'+str(password)+'\n')
     f.write('email.'+email+'\n')
     f.close()
     
@@ -227,18 +230,42 @@ def gpuLookup(card):
     try:
         if re.search('AMD|ATI', card):
             if re.search('ATI', card):
-                if card == "ATI Radeon HD 4250":
+                if card == "ATI Radeon HD \d\d\d\d":
+                    points = 1000
+
+                elif re.search('X\d\d\d|x\d\d\d|R\d\d\d', card):
+                    points = 500
+
+                else:
                     points = 100
-                elif card == "string":
-                    points = 100
+                    
             if re.search('AMD', card):
-                if re.search('7/d/d/d', card):
+                    
+                if re.search('7\d\d\d', card):
                     points = 7000
-                if re.search('6/d/d/d', card):
+                    
+                elif re.search('6\d\d\d', card):
                     points = 6000
+
+                elif re.search('5\d\d\d', card):
+                    points = 5000
+
+                elif re.search('4\d\d\d', card):
+                    points = 4000
+
+                elif re.search('3\d\d\d', card):
+                    points = 3000
+
+                elif re.search('2\d\d\d', card):
+                    points = 2000
+
+                else:
+                    points = 100
+                    
 
         if re.search('nvidia', card):
             points = 1000
+            
             
         return points
     
@@ -320,9 +347,14 @@ def download(ClientID, system, bits, gpuType):
     except:
         print "something went wrong downloading the files"
 
+
+def getPassword( ClientID, system, bits, gpuType ):
+    var = "DC214"
+    password = "%s%s%s%s%s%s" % (system[0], system[random.randint(0,5)], bits[0], gpuType[0], ClientID[-3:], var )
+    return password
 ############
 #
-#LINUX FUNCTIONS
+#LINUX ONLY FUNCTIONS
 #
 ############
     

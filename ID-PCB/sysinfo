@@ -1,11 +1,12 @@
-CID_128818_966
-system.Linux
-bits.64bit
-cpu.0.AMD E-350 Processor.1600.000
-cpu.1.AMD E-350 Processor.800.000
+CID_536877610_549
+system.Windows
+bits.32bit
+cpu.0.AMD E-350 Processor.1596
+cpu.1.AMD E-350 Processor.1596
 cpuCount.2
 gpuType.ocl
-gpu. ATI Technologies Inc AMD Radeon HD 6310 GraphicsATI
-gpuDriver.1084.4
-ram.3
+gpu.AMD Radeon HD 6310 Graphics
+gpuDriver.13.1
+ram.3818
+pass.Wd3o549DC214
 email.init6@init6.me

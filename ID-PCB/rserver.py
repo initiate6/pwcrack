@@ -11,7 +11,7 @@ def main():
     
     #some functions to help repetitive task in connect()
     def msg(ircCMD, channel, msg):
-        irc.send(ircCMD +'#'+ msg + '\r\n')
+        irc.send('%s #%s %s\r\n' % (ircCMD, channel, msg))
     def join(channel):
         irc.send('JOIN #%s \r\n' % channel)
 
@@ -44,26 +44,28 @@ def main():
 	if data.find('!safeword\r\n') != -1:
             irc.send('QUIT\r\n')
             exit()#exits python. 
-	if data.find('!ready') != -1:
+	if data.find('!register') != -1:
             clientData = data.split('.')[1:]
             clientID = clientData[1]
-            system = clientData[2]
-            bits = clientData[3]
-            cpuCores = clientData[4]
-            gpuType = clientData[5]
-            email = str('.'.join(clientData[6:8])).strip('\r\n')
-            state = "ready"
-            addclient(clientID, state, system, bits, cpuCores, gpuType, email)
-        if data.find('!busy') != -1:
+            state = clientData[2]
+            system = clientData[3]
+            bits = clientData[4]
+            cpuCores = clientData[5]
+            gpuType = clientData[6]
+            password = clientData[7]
+            email = str('.'.join(clientData[8:10])).strip('\r\n')
+            register(clientID, state, system, bits, cpuCores, gpuType, password, email)
+        if data.find('!update') != -1:
             clientData = data.split('.')[1:]
             clientID = clientData[1]
-            system = clientData[2]
-            bits = clientData[3]
-            cpuCores = clientData[4]
-            gpuType = clientData[5]
-            email = str('.'.join(clientData[6:8])).strip('\r\n')
-            state = "busy"
-            busyclient(clientID, state, system, bits, cpuCores, gpuType, email)
+            state = clientData[2]
+            system = clientData[3]
+            bits = clientData[4]
+            cpuCores = clientData[5]
+            gpuType = clientData[6]
+            password = clientData[7]
+            email = str('.'.join(clientData[8:10])).strip('\r\n')
+            updateClient(clientID, state, system, bits, cpuCores, gpuType, email)
             
         
         #print data
@@ -77,7 +79,7 @@ def createDB():
 
     #create table clients and data names/types 
     cur.execute('''CREATE TABLE IF NOT EXISTS clients
-                 (clientID text, state, system text, bits text, Threads text, gpuType text, email text)''') 
+                 (clientID text, state text, system text, bits text, Threads text, gpuType text, auth text, email text)''') 
 
     #create table algorithms and data names/types 
     cur.execute('''CREATE TABLE IF NOT EXISTS algorithms
@@ -96,72 +98,98 @@ def createDB():
     conn.close()
         
     
-def busyclient(clientID, state, system, bits, cpuCores, gpuType, email):
+def updateClient(clientID, state, system, bits, cpuCores, gpuType, email):       
+        try:
+            
+            conn = sqlite3.connect('pwcrack.db')
 
-    try:
-        
-        conn = sqlite3.connect('pwcrack.db')
+            with conn:
 
-        with conn:
-
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM clients")
-            rows = cur.fetchall()
-                
-            for row in rows:
-                if re.match(clientID,row[0]):
-                    cur.execute("UPDATE clients SET state=? WHERE clientID=?",(state, clientID))
-                    print row
-
-    except sqlite3.Error, e:
-        print "Error %s:" % e.args[0]
-        sys.exit(1)
-
-    finally:
-        if conn:
-            conn.close()
-
-def addclient(clientID, state, system, bits, cpuCores, gpuType, email):
-
-    try:
-        
-        clients = []
-        states = []
-        conn = sqlite3.connect('pwcrack.db')
-
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM clients")
-            rows = cur.fetchall()
-            #if table is empty no clients have been added go ahead and add client. 
-            if not rows:
-               cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, email)) 
-
-            #Creates a list of all clients then it checks to see if current client is in database if not adds it. if so prints error msg.
-            else:
-                for row in rows:
-                    clients.append(row[0])
-                    states.append(row[1])
+                cur = conn.cursor()
+                cur.execute("SELECT * FROM clients")
+                rows = cur.fetchall()
                     
-                if clientID not in clients:
-                    cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, email))
-                    print row
+                for row in rows:
+                    if re.match(clientID,row[0]) and row[6] == 'Y': #If client is found in database and has been authicated update state
+                        cur.execute("UPDATE clients SET state=? WHERE clientID=?",(state, clientID))
+                        print row
 
-                elif "busy" in states:
-                    cur.execute("UPDATE clients SET state=? WHERE clientID=?",(state, clientID))
+        except sqlite3.Error, e:
+            print "Error %s:" % e.args[0]
+            sys.exit(1)
+
+        finally:
+            if conn:
+                conn.close()
+
+def checkPassword(password):
+    #pull this out into a new fuction and return "clear for landing"
+    if password[0] == 'W':
+        if re.match('[Windo]{1}', password[1]) and system == 'Windows': #fix match pattern
+            if re.match('3|6', password[2]) and bits[0] == password[2]:
+                if re.match('o|c|n', password[3]) and re.match('o|c|n', gpuType[0]):
+                    if re.match('\d\d\d', password[4:6] and re.match(str(password[4:6]), ClientID[-3:]):
+                        if password[7:] == 'DC214':
+                            return True
+                        else:
+                            print "you're not legit"
+                            return False
+                            #send kill job. 
+            
+
+    elif password[0] == 'L':
+        if re.match('[Linux]{1}', password[1]) and system == 'Linux': #fix match pattern.
+            if re.match('3|6', password[2]) and bits[0] == password[2]:
+                if re.match('o|c|n', password[3]) and re.match('o|c|n', gpuType[0]):
+                    if re.match('\d\d\d', password[4:6] and re.match(str(password[4:6]), ClientID[-3:]):
+                        if password[7:] == 'DC214':
+                            return True
+                        else:
+                            print "you're not legit"
+                            return False
+                            #send kill job.
+    else:
+        print "you're not legit"
+        return False
+        #send kill job. 
+
+
+def register(clientID, state, system, bits, cpuCores, gpuType, password, email):
+    if checkPassword(password):
+        auth = "Y"
+        try:                            
+            clients = []
+            conn = sqlite3.connect('pwcrack.db')
+
+            with conn:
+                cur = conn.cursor()
+                cur.execute("SELECT * FROM clients")
+                rows = cur.fetchall()
+                #if table is empty no clients have been added go ahead and add client. 
+                if not rows:
+                   cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, auth, email)) 
+
+                #Creates a list of all clients then it checks to see if current client is in database if not adds it. if so prints error msg.
                 else:
-                    print "Client already in database"
-                    print row
+                    for row in rows:
+                        clients.append(row[0])
+                        
+                    if clientID not in clients:
+                        cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, auth, email))
 
-    except sqlite3.Error, e:
-        print "Error %s:" % e.args[0]
-        sys.exit(1)
+                    else:
+                        print "Client already in registered in database"
+                        break #double check this is breaking out of register fuction. 
 
-    finally:
-        if conn:
-            conn.close()
+        except sqlite3.Error, e:
+            print "Error %s:" % e.args[0]
+            sys.exit(1)
+
+        finally:
+            if conn:
+                conn.close()
     
-#LOTS OF WORK TO BE DONE HERE!!!!! 
+#LOTS OF WORK TO BE DONE HERE!!!!!  ONLY ADD WHAT THEY HAD LAST YEAR.
 def LoadAlgorithms():
 #algorithm, mcode, AMDaccel, AMDloops, NVaccel, NVloops
     

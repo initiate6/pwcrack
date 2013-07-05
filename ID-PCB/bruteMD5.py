@@ -8,20 +8,15 @@ def main():
     
     #some functions to help repetitive task in connect()
     def msg(ircCMD, channel, msg):
-        irc.send(ircCMD +'#'+ msg + '\r\n')
-    def join(channel)
+        irc.send('%s #%s %s\r\n' % (ircCMD, channel, msg))
+    def join(channel):
         irc.send('JOIN #%s \r\n' % channel)
         
     network = 'irc.init6.me'
     chan = 'pwcrack'
     port = 16667
-    nick = 'yourMaster'
-    
-    conn = sqlite3.connect('pwcrack.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE clients
-                 (clientID text, system text, bits text, Threads text, gpuType text, options text)''')    
-        
+    nick = 'bruteMD5'
+      
     socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     socket.connect((network,port))
     irc = ssl.wrap_socket(socket)
@@ -41,17 +36,9 @@ def main():
 	if data.find('!safeword\r\n') != -1:
             irc.send('QUIT\r\n')
             exit()#exits python. 
-	if data.find('!ready') != -1:
-            clientData = data.split('.')[1:]
-            clientID = clientData[1]
-            system = clientData[2]
-            bits = clientData[3]
-            cpuCores = clientData[4]
-            gpuType = clientData[5]
-            c.execute("INSERT INTO clients VALUES (clientID, system, bits, cpuCores, gpuType, '')")
-        
+	if data.find('!<replace>') != -1:
+
         print data
-        msg('PRIVMSG', chan, ".update")
 
 def something():
         command = buildcmd(clientID, system, bits, cpuCores, gpuType, amode, algorithm, ofile, hashfile, bruteforce)
