@@ -122,14 +122,21 @@ def updateClient(clientID, state, system, bits, cpuCores, gpuType, email):
             if conn:
                 conn.close()
 
-def checkPassword(password):
+def checkPassword(password, system, bits, gpuType, clientID):
     #pull this out into a new fuction and return "clear for landing"
+    print "in checkPassword"
     if password[0] == 'W':
-        if re.match('[Windo]{1}', password[1]) and system == 'Windows': #fix match pattern
+        print "pass 1"
+        if re.match('[Windo]{1,5}', password[1]) and system == 'Windows': #fix match pattern
+            print "pass 2"
             if re.match('3|6', password[2]) and bits[0] == password[2]:
+                print "pass 3"
                 if re.match('o|c|n', password[3]) and re.match('o|c|n', gpuType[0]):
-                    if re.match('\d\d\d', password[4:6] and re.match(str(password[4:6]), ClientID[-3:]):
+                    print "pass 4"
+                    if re.match('\d\d\d', password[4:6]):
+                        print "Pass 5"
                         if password[7:] == 'DC214':
+                            print "password is a okay"
                             return True
                         else:
                             print "you're not legit"
@@ -141,7 +148,7 @@ def checkPassword(password):
         if re.match('[Linux]{1}', password[1]) and system == 'Linux': #fix match pattern.
             if re.match('3|6', password[2]) and bits[0] == password[2]:
                 if re.match('o|c|n', password[3]) and re.match('o|c|n', gpuType[0]):
-                    if re.match('\d\d\d', password[4:6] and re.match(str(password[4:6]), ClientID[-3:]):
+                    if re.match('\d\d\d', password[4:6]) and re.match(str(password[4:6]), clientID[-3:]):
                         if password[7:] == 'DC214':
                             return True
                         else:
@@ -155,7 +162,7 @@ def checkPassword(password):
 
 
 def register(clientID, state, system, bits, cpuCores, gpuType, password, email):
-    if checkPassword(password):
+    if checkPassword(password, system, bits, gpuType, clientID) == True:
         auth = "Y"
         try:                            
             clients = []
@@ -178,8 +185,7 @@ def register(clientID, state, system, bits, cpuCores, gpuType, password, email):
                         cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, auth, email))
 
                     else:
-                        print "Client already in registered in database"
-                        break #double check this is breaking out of register fuction. 
+                        print "Client already in registered in database" 
 
         except sqlite3.Error, e:
             print "Error %s:" % e.args[0]

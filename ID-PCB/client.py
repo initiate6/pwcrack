@@ -4,6 +4,7 @@
 
 import socket, string, time, ssl
 import urllib, re, os
+import datetime as dt
 
 def main():
      
@@ -37,7 +38,7 @@ def main():
     print password
     print email
 
-    #connect(network, nick, chan, chan1, port, system, bits, threads, gpu, email)
+    connect(network, nick, chan, chan1, port, system, bits, threads, gpu, password, email)
     
 def readsysinfo():
     try:
@@ -53,7 +54,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
     import urllib, re, os
     from async_subprocess import AsyncPopen, PIPE
 
-    def msg(ircCMD, channel, msg):
+    def ircmsg(ircCMD, channel, msg):
         irc.send('%s #%s %s\r\n' % (ircCMD, channel, msg))
     def join(channel):
         irc.send('JOIN #%s \r\n' % channel)
@@ -66,7 +67,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 	#CID_536877610_549, Windows, 64bit, 2, ocl, -a 3, md5 -m 0, hash:plain, CID#W642ocla3m0.found , hashfile, [rules] Mask|wordlist
 	#send msg(!update with state flag set to busy to update rserver with client status)
 	#excute command on PC
-	#Need to repace the args with the vars.  
+	
 	args = ("hashcat-plus64.exe", "-m 100", "-a 3", "-n 2", "A0.M100.hash", "?a?a?a?a?a")
 	process = AsyncPopen(args,
                             stdin=PIPE,
@@ -81,8 +82,20 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 		if stdoutdata:
 			print stdoutdata # switch to irc.send(stdoutdata) to update room. 
 		time.sleep(5) #in seconds
-		#TODO Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
+		#Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
+                date = dt.date.today()
+                time =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
+                if date == '2013-08-03':
+                    if float(time) >=  23.35:
+                        print "Time is up, closing and uploading what we have done so far"
+                        #excute upload stuff. maybe just do a break.
+                    else:
+                        pass
+                        
 		retcode = process.poll()
+
+	#upload found file to FTP server.
+	#fileUpload(foundfile)
 
     
     	
@@ -98,7 +111,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
     join(chan1)
     state = 'standby'
     msg = '!register.'+nick+'.'+state+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
-    msg('PRIVMSG', chan, msg)
+    ircmsg('PRIVMSG', chan, msg)
 	
     while True:
         data = irc.recv(4096)
@@ -132,6 +145,9 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                 
         print data
 
+def fileUpload(foundfile):
+    print "file has been uploaded"
+    #upload found file to FTP site
     
 def dlHashes():
     return 'Successful'

@@ -221,7 +221,7 @@ def getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ram
         gpuRamPts = gpuMem * 2
         points += int(gpuRamPts)
 
-    rand = random.randint(0,999)
+    rand = random.randint(000,999)
     return ("CID"+"_"+str(points)+"_"+str(rand))
 
 #needs a lot of work. Check for different types of GPU cards and give it points.

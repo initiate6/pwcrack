@@ -64,26 +64,35 @@ def buildcmd(clientID, system, bits, cpuCores, gpuType, amode, algorithm, ofile,
     command = ''
     if system == 'Windows':
         if bits == "32bit":
-            if gpuType == "ATI" or gpuType == "AMD":
-                command = "oclHashcat-plus32.exe --help"
-                
+            if gpuType == "ocl":
+                command = "oclHashcat-plus32.exe -m 0 -a 3 --remove --markov-hcstat=hashcat.hcstat -t 100  \
+                            -o outputfile.txt --outfile-format=3 --disable-potfile -n 80 -u 1000 \
+                            --gpu-temp-retain=70 example500.hash a?a?a?a?a?a?a?a "
+            elif gpuType == "cuda":
+                command = "cudaHashcat-Plus32.exe --help"
 
-            else: #build hashcat cpu command see http://hashcat.net/wiki/doku.php?id=hashcat
-                command = "hashcat-cli32.exe --remove --disable-potfile -n "+cpuCores+" -a "+str(amode)+" -m "+str(algorithm)+" -o "+ofile+" "+hashfile+" "+bruteforce
-                
-        if bits == "64bit":
-            if gpuType == "ATI" or gpuType == "AMD":
+             
+        elif bits == "64bit":
+            if gpuType == "ocl":
                 command = "oclHashcat-plus64.exe --help"
-
-            else: #build hashcat cpu command see http://hashcat.net/wiki/doku.php?id=hashcat
-                command = "hashcat-cli64.exe --remove --disable-potfile -n "+cpuCores+" -a "+str(amode)+" -m "+str(algorithm)+" -o "+ofile+" "+hashfile+" "+bruteforce
-    
-
-    return command
+            elif gpuType == "cuda":
+                command = "cudaHashcat-plus64.exe --help"
 
         
-    if system == 'Linux':
-        print "Linux"
+    elif system == 'Linux':
+        if bits == "32bit":
+            if gpuType == "ocl":
+                command = "./oclHashcat-plus32.bin --help"
+            elif gpuType == "cuda":
+                command = "./cudaHashcat-Plus32.bin --help"
+
+             
+        elif bits == "64bit":
+            if gpuType == "ocl":
+                command = "./oclHashcat-plus64.bin --help"
+            elif gpuType == "cuda":
+                command = "./cudaHashcat-plus64.bin --help"
+      
 
     if system == 'Darwin':
         print "Darwin"
