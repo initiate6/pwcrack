@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 import socket, string, time, ssl
-import urllib, re, os, sqlite3
+import urllib, re, os, sqlite3, sys
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
     network = 'irc.init6.me'
     chan = 'pwcrack'
     port = 16667
-    nick = 'TPSreport'
+    nick = 'regServer'
     
         
     socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -124,17 +124,11 @@ def updateClient(clientID, state, system, bits, cpuCores, gpuType, email):
 
 def checkPassword(password, system, bits, gpuType, clientID):
     #pull this out into a new fuction and return "clear for landing"
-    print "in checkPassword"
     if password[0] == 'W':
-        print "pass 1"
-        if re.match('[Windo]{1,5}', password[1]) and system == 'Windows': #fix match pattern
-            print "pass 2"
+        if re.match('[Windo]{1,5}', password[1]) and system == 'Windows':
             if re.match('3|6', password[2]) and bits[0] == password[2]:
-                print "pass 3"
                 if re.match('o|c|n', password[3]) and re.match('o|c|n', gpuType[0]):
-                    print "pass 4"
-                    if re.match('\d\d\d', password[4:6]):
-                        print "Pass 5"
+                    if re.match('\d\d\d', password[4:7]):
                         if password[7:] == 'DC214':
                             print "password is a okay"
                             return True
@@ -145,19 +139,25 @@ def checkPassword(password, system, bits, gpuType, clientID):
             
 
     elif password[0] == 'L':
-        if re.match('[Linux]{1}', password[1]) and system == 'Linux': #fix match pattern.
+        print "pass 1"
+        if re.match('[Linux]{1,5}', password[1]) and system == 'Linux':
+            print "pass 1"
             if re.match('3|6', password[2]) and bits[0] == password[2]:
-                if re.match('o|c|n', password[3]) and re.match('o|c|n', gpuType[0]):
-                    if re.match('\d\d\d', password[4:6]) and re.match(str(password[4:6]), clientID[-3:]):
+                print "pass 2"
+                if re.match('o|c|n', password[3]) and re.match('o|c|N', gpuType[0]):
+                    print "pass 3"
+                    if re.match('\d\d\d', password[4:7]):
+                        print "pass 4"
                         if password[7:] == 'DC214':
+                            print "Password is a okay TUX"
                             return True
                         else:
                             print "you're not legit"
                             return False
                             #send kill job.
-    else:
-        print "you're not legit"
-        return False
+    #else:
+        #print "you're not legit"
+        #return False
         #send kill job. 
 
 
@@ -174,7 +174,7 @@ def register(clientID, state, system, bits, cpuCores, gpuType, password, email):
                 rows = cur.fetchall()
                 #if table is empty no clients have been added go ahead and add client. 
                 if not rows:
-                   cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, auth, email)) 
+                   cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, auth, email)) 
 
                 #Creates a list of all clients then it checks to see if current client is in database if not adds it. if so prints error msg.
                 else:
@@ -182,7 +182,7 @@ def register(clientID, state, system, bits, cpuCores, gpuType, password, email):
                         clients.append(row[0])
                         
                     if clientID not in clients:
-                        cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, auth, email))
+                        cur.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (clientID, state, system, bits, cpuCores, gpuType, auth, email))
 
                     else:
                         print "Client already in registered in database" 

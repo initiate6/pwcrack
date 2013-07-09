@@ -17,7 +17,7 @@ def main():
     port = 16667
     nick = 'bruteMD5'
       
-    socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket.connect((network,port))
     irc = ssl.wrap_socket(socket)
     irc.send('NICK %s\r\n' % nick)
@@ -59,9 +59,17 @@ def options():
     rules1 =
     
 
+
     
+
 def buildcmd(clientID, system, bits, cpuCores, gpuType, amode, algorithm, ofile, hashfile, bruteforce):
-    command = ''
+    command = []
+    #hashes = [ 'raw-md5', 'raw-sha1','raw-md4', 'mysql-sha1', 'ntlm', 'nsldap', 'raw-md5u' ]
+    hashes = [ '- m 0', '-m 100', '-m 900' '-m 300','-m 1000', '-m 101', '-m 30' ]
+    for hash in hashes:
+        print hash
+    
+    
     if system == 'Windows':
         if bits == "32bit":
             if gpuType == "ocl":

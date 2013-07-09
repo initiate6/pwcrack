@@ -198,7 +198,7 @@ def getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ram
 
     points = 0
     if system == "Windows":
-        points ++ 50
+        points += 50 
     if system == "Linux":
         points += 100
     if system == "Darwin":
@@ -208,20 +208,20 @@ def getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ram
     if bits == "32bit":
         points += 20
     for cpu in cpuInfo:
-        points += 150
-        ghz = cpu.split('.')[2]
-        points += int(( float(ghz) / 1000 ) * 100)
+        points += 250
+        
     rampts = (ramInfo/1024) * 20
     points += int(rampts)
 
     if gpuDesc:
         gpuPts = gpuLookup(gpuDesc)
         points += int(gpuPts)
-
-        gpuRamPts = gpuMem * 2
+        
+        gpuRamPts = (gpuMem / 1024 / 1024) * 2
         points += int(gpuRamPts)
 
     rand = random.randint(000,999)
+
     return ("CID"+"_"+str(points)+"_"+str(rand))
 
 #needs a lot of work. Check for different types of GPU cards and give it points.
@@ -265,7 +265,6 @@ def gpuLookup(card):
 
         if re.search('nvidia', card):
             points = 1000
-            
             
         return points
     
@@ -350,8 +349,11 @@ def download(ClientID, system, bits, gpuType):
 
 def getPassword( ClientID, system, bits, gpuType ):
     var = "DC214"
-    password = "%s%s%s%s%s%s" % (system[0], system[random.randint(0,5)], bits[0], gpuType[0], ClientID[-3:], var )
+    if not gpuType:
+        gpuType = 'n'
+    password = "%s%s%s%s%s%s" % (system[0], system[random.randint(0,4)], bits[0], gpuType[0], ClientID[-3:], var )
     return password
+
 ############
 #
 #LINUX ONLY FUNCTIONS
@@ -480,11 +482,9 @@ def linGetCPUinfo():
 		
     last = cpuInfo.pop()
     if last == '':
-	#print cpuInfo
         return cpuInfo
     else:
         cpuInfo.append(last)
-	#print cpuInfo
         return cpuInfo
 
 

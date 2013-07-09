@@ -49,7 +49,6 @@ def readsysinfo():
         print("({0})".format(e))
         
 def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, password, email):
-    #not sure why I needed to included the import socket here as well??
     import socket, string, time, ssl
     import urllib, re, os
     from async_subprocess import AsyncPopen, PIPE
