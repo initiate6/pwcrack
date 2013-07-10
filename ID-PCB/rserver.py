@@ -81,18 +81,12 @@ def createDB():
     cur.execute('''CREATE TABLE IF NOT EXISTS clients
                  (clientID text, state text, system text, bits text, Threads text, gpuType text, auth text, email text)''') 
 
-    #create table algorithms and data names/types 
-    cur.execute('''CREATE TABLE IF NOT EXISTS algorithms
-                 (algorithm text, mcode text, AMDaccel text, AMDloops text, NVaccel text, NVloops text)''')
-
     #create a table completed. track all clients and the command they excuted and if it finished or cutoff.
     #Add support down the line for how many recoverd. 
     cur.execute('''CREATE TABLE IF NOT EXISTS completed
                  (clientID text, completed text, command text)''')
 
-    #BruteForce Table. Start=one char for client to start on. charset full charset 
-    cur.execute('''CREATE TABLE IF NOT EXISTS bftable
-                 (start text, charset text)''')    
+  
     conn.commit()
     cur.close()
     conn.close()
@@ -195,62 +189,7 @@ def register(clientID, state, system, bits, cpuCores, gpuType, password, email):
             if conn:
                 conn.close()
     
-#LOTS OF WORK TO BE DONE HERE!!!!!  ONLY ADD WHAT THEY HAD LAST YEAR.
-def LoadAlgorithms():
-#algorithm, mcode, AMDaccel, AMDloops, NVaccel, NVloops
-    
-
-    hashtypes = (
-        ('md5', '-m 0', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('md5($pass.$salt)', '-m 10', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('md5($salt.$pass)', '-m 20', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('md5(unicode($pass).$salt)', '-m 30', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('md5($salt.unicode($pass))', '-m 40', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('sha1', '-m 100', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('sha1($pass.$salt)', '-m 110', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('sha1($salt.$pass)', '-m 120', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('sha1(unicode($pass).$salt)', '-m 130', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('sha1($salt.unicode($pass))', '-m 140', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('MySQL', '-m 300', '-n 256', '-u 1024', '-n 256', '-u 1024'),
-        ('phpass,MD5(wordpress),md5(phpBB3)', '-m 400', '-n 256', '-u 1000', '-n 256', '-u 1000'),
-        ('md5crypt', '-m 500', '-n 80', '-u 1000', '-n 80', '-u 1000'),
-        ('md4', '-m 900', '-n 160', '-u 1024', '-n 160', '-u 1024'),
-        ('NTLM', '-m 1000', '-n 160', '-u 1024', '-n 160', '-u 1024'),
-    )
-
-    conn = sqlite3.connect('pwcrack.db')
-
-    with con:
-
-        cur = coon.cursor()
-
-        cur.execute("DROP TABLE IF EXISTS algorithms")
-        cur.execute('''CREATE TABLE IF NOT EXISTS algorithms
-                     (algorithm text, mcode text, AMDaccel text, AMDloops text, NVaccel text, NVloops text)''')
-        cur.executemany("INSERT INTO algorithms VALUES(?, ? , ?, ?, ?, ?)", hashtypes)
 
 
-#TODO add support to send new charset from IRC. 
-def LoadBFtable():
-
-    charset = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.? /ñ"
-    bftable = []
-
-    for char in charset:
-        bftable.append( (char, charset) )
-     
-    conn = sqlite3.connect('pwcrack.db')
-    cur = conn.cursor()
-
-    with conn:
-        #BruteForce Table. Start=one char for client to start on. charset full charset.
-        cur.execute("DROP TABLE IF EXISTS bftable")
-        cur.execute('''CREATE TABLE IF NOT EXISTS bftable
-                     (start text, charset text)''')    
-
-        cur.executemany("INSERT INTO bftable VALUES(?, ?)", bftable)
-
-
-    
  
 main()
