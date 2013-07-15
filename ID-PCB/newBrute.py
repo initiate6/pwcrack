@@ -61,36 +61,74 @@ def something():
         irc.send('PRIVMSG #%s %s\r\n' % (chan1, msg))
 
 def controller(charset):
-    users = getUsers()
-    while True:
-        for user in range(len(users)):
-            name = int(user)
-            if checkClientState(users[name][0]) == 'ready':
-                command = buildcmd(users[name], charset)
-                updateClient(users[name][0], 'busy')
-                print command
-                print '\n'
-                #send command to client
 
-def buildcmd(user, charset):
+    
+    #how many clients do you want working on this program and power level.
+    clients = 2
+    lPowerLvl = 5  #1-11  1 being crappy and 11 being really good.
+    HPowerLvl = 8
+
+    users = {}
+
+    
+    hashes = [ 'raw-md5', 'raw-sha1', 'raw-md4', 'mysql-sha1', 'ntlm', 'nsldap', 'raw-md5u' ]
+    for hashName in hashes:
+        createBFtable(hashName, charset)
+    
+        for client in range(clients):
+
+            clientID, state, system, bits, gpuType = getClientInfo(lPowerLvl, HPowerLvl)
+            program = getProgram(system, bits, gpuType)
+            users[client] = []
+            users[client].append(clientID)
+            users[client].append(state)
+            users[client].append(system)
+            users[client].append(bits)
+            users[client].append(gpuType)
+            users[client].append(program)
+        
+        while True:
+            for user in range(len(users)):
+                name = int(user)
+                if checkClientState(users[name][0]) == 'ready':
+                    clientID, command = buildcmd(users[name], hashName)
+                    updateClient(users[name][0], 'busy')
+                    print clientID, command
+                    print '\n'
+
+
+def buildcmd(user, hashName):
+    command = []
+    gpuSettings = []
+    attackmode = '-a 3'
+    staticOptions = ['--remove', '--outfile-format=3', '--disable-potfile']
+    markovSettings = '--markov-hcstat=hashcat.hcstat'
+
+    hashFile, mcode, nvAccel, nvLoops, amdAccel, amdLoops = '', '', '', '', '', ''
+    
+    #change these options for different rounds.
+    CL = 'CL1-7'
+    staticOptions.append('-i --increment-min=1 --increment-max=7')
+    markovThreshold = '-t 0'
+    
     clientID = user[0]
     state = user[1]
     system = user[2]
     bits = user[3]
     gpuType = user[4]
     program = user[5]
-    
-    command = []
-    attackmode = '-a 3'
-    staticOptions = ['--remove', '--outfile-format=3', '--disable-potfile']
-    markovSettings = '--markov-hcstat=hashcat.hcstat'
 
-    #change these options for different rounds.
-    CL = 'CL1-7'
-    staticOptions.append('-i --increment-min=1 --increment-max=7')
-    markovThreshold = '-t 0'
-        
-    mcode, staticOptions, outfile, gpuSettings, hashFile, bruteforce = stage2build(clientID, staticOptions, charset, gpuType, CL)
+    if gpuType == "ocl":
+        staticOptions.append('--gpu-temp-retain=70')
+        hashFile, mcode, amdAccel, amdLoops = getGPUSettings(gpuType, hashName)
+        gpuSettings.append(amdAccel)
+        gpuSettings.append(amdLoops)
+    if gpuType == "cuda":
+        hashFile, mcode, nvAccel, nvLoops = getGPUSettings(gpuType, hashName)
+        gpuSettings.append(nvAccel)
+        gpuSettings.append(nvLoops)
+    bfstart, bruteforce = getBruteForce(hashName)
+    outfile = getOutFile(clientID, hashName, bfstart, CL)
     
     command.append(program)
     command.append(mcode)
@@ -104,52 +142,9 @@ def buildcmd(user, charset):
         command.append(gpuOption)
     command.append(hashFile)
     command.append(bruteforce)
-    return command
+    return clientID, command
 
 
-def stage2build(clientID, staticOptions, charset, gpuType, CL):
-    gpuSettings = []
-    hashes = [ 'raw-md5', 'raw-sha1', 'raw-md4', 'mysql-sha1', 'ntlm', 'nsldap', 'raw-md5u' ]
-    #initilze global vars
-    hashFile, mcode, nvAccel, nvLoops, amdAccel, amdLoops = '', '', '', '', '', ''
-    
-    for hashName in hashes:
-        createBFtable(hashName, charset)
-        if gpuType == "ocl":
-            staticOptions.append('--gpu-temp-retain=70')
-            hashFile, mcode, amdAccel, amdLoops = getGPUSettings(gpuType, hashName)
-            gpuSettings.append(amdAccel)
-            gpuSettings.append(amdLoops)
-        if gpuType == "cuda":
-            hashFile, mcode, nvAccel, nvLoops = getGPUSettings(gpuType, hashName)
-            gpuSettings.append(nvAccel)
-            gpuSettings.append(nvLoops)
-        bfstart, bruteforce = getBruteForce(hashName)
-        outfile = getOutFile(clientID, hashName, bfstart, CL)
-        return mcode, staticOptions, outfile, gpuSettings, hashFile, bruteforce
-        
-    
-def getUsers():
-    user = {}
-    #how many clients do you want working on this program and power level.
-    clients = 2
-    lPowerLvl = 5  #1-10  1 being crappy and 10 being really good.
-    HPowerLvl = 8
-
-    for client in range(clients):
-
-        clientID, state, system, bits, gpuType = getClientInfo(lPowerLvl, HPowerLvl)
-        program = getProgram(system, bits, gpuType)
-        user[client] = []
-        user[client].append(clientID)
-        user[client].append(state)
-        user[client].append(system)
-        user[client].append(bits)
-        user[client].append(gpuType)
-        user[client].append(program)
-
-    return user
-    
 
 def getClientInfo(lPowerLvl, HPowerLvl):
     try:
@@ -304,15 +299,13 @@ def getBruteForce(hashName):
             rows = cur.fetchall()
 
             for row in rows:
-                print row
                 if re.match('incomplete', row[2]):
                     bfstart = row[0]
                     charset = row[1]
                     bfupdate(hashName, bfstart, 'inprogress')
                     bfCMD = "-1 %s -2 %s ?1?2?2?2?2?2?2?2?2" % (bfstart, charset)
                     return bfstart, bfCMD
-                else:
-                    return None, None
+                
                 
     except sqlite3.Error, e:
         print "Error getbf %s:" % e.args[0]
@@ -335,11 +328,11 @@ def bfupdate(hashName, bfstart, status):
 
             for row in rows:
                 if re.match(bfstart,row[0]):
-                    print "update bftable: %s starting with: %s with new status %s" % (tableName, bfstart, status)
+                    #print "update bftable: %s starting with: %s with new status %s" % (tableName, bfstart, status)
                     #if this doesn't work create update line and pass that in.
                     cur.execute("UPDATE "+tableName+" SET status=? WHERE start=?",(status, bfstart))
 
-        conn.commit()
+                    conn.commit()
     except sqlite3.Error, e:
         print "Error bfupdate %s:" % e.args[0]
         sys.exit(1)
