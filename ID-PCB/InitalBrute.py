@@ -4,7 +4,6 @@
 import string, time, ssl, sys
 import urllib, re, os, sqlite3
 
-
 def main():
     import socket
     #some functions to help repetitive task in connect()
@@ -12,8 +11,6 @@ def main():
         irc.send('%s #%s %s\r\n' % (ircCMD, channel, msg))
     def join(channel):
         irc.send('JOIN #%s \r\n' % channel)
-
-    charset = ""
     
     network = 'irc.init6.me'
     chan = 'pwcrack'
@@ -21,10 +18,8 @@ def main():
     nick = 'InitalBrute'
 
     #test function
-    controller(charset)
+    controller()
 
-
-    
     socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket.connect((network,port))
     irc = ssl.wrap_socket(socket)
@@ -43,49 +38,15 @@ def main():
             irc.send('PONG '+data.split()[1]+'\r\n')
 	if data.find('!safeword\r\n') != -1:
             irc.send('QUIT\r\n')
-            exit()#exits python.
-        if data.find('!charset\.') != -1:
-            charset = data.split('.')[1:].strip('\r\n')
-            
+            exit()#exits python.       
 	if data.find('!start') != -1:
-            controller(charset)
-    
+            controller()
 
         print data
 
-def sendCMD(clientID, command):
-    import socket
-    #some functions to help repetitive task in connect()
-
-    def join(channel):
-        irc.send('JOIN #%s \r\n' % channel)
-    
-    network = 'irc.init6.me'
-    chan1 = 'pwc'+'_'.join(clientID.split('_')[1:])
-    port = 16667
-    nick = 'sendingCMD'
 
 
-    
-    socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    socket.connect((network,port))
-    irc = ssl.wrap_socket(socket)
-    irc.send('NICK %s\r\n' % nick)
-    print irc.recv(4096)
-    irc.send('USER %s %s %s :My bot\r\n' % (nick,nick,nick))
-    print irc.recv(4096)
-    join(chan1)
-    print irc.recv(4096)
-    
-    msg = '!%s' % clientID
-    for cmd in command:
-        msg += '..'
-        msg += re.sub(' ', '..', cmd)
-
-    print msg    
-    irc.send('PRIVMSG #%s %s\r\n' % (chan1, msg))
-
-def controller(charset):
+def controller():
 
     
     #how many clients do you want working on this program and power level.
@@ -98,7 +59,7 @@ def controller(charset):
     
     hashes = [ 'raw-md5', 'raw-sha1', 'raw-md4', 'mysql-sha1', 'ntlm', 'nsldap', 'raw-md5u' ]
     for hashName in hashes:
-        createBFtable(hashName, charset)
+        createBFtable(hashName)
     
         for client in range(clients):
 
@@ -118,7 +79,6 @@ def controller(charset):
                 if checkClientState(users[name][0]) == 'ready':
                     clientID, command = buildcmd(users[name], hashName)
                     updateClient(users[name][0], 'busy')
-                    print clientID, command
                     sendCMD(clientID, command)
 
 
@@ -169,7 +129,35 @@ def buildcmd(user, hashName):
     command.append(bruteforce)
     return clientID, command
 
+def sendCMD(clientID, command):
+    import socket, string, ssl, re, os
+    #some functions to help repetitive task in connect()
 
+    def join(channel):
+        irc.send('JOIN #%s \r\n' % channel)
+    
+    network = 'irc.init6.me'
+    chan1 = 'pwc'+'_'.join(clientID.split('_')[1:])
+    port = 16667
+    nick = 'sendingCMD'
+
+    socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    socket.connect((network,port))
+    irc = ssl.wrap_socket(socket)
+    irc.send('NICK %s\r\n' % nick)
+    print irc.recv(4096)
+    irc.send('USER %s %s %s :My bot\r\n' % (nick,nick,nick))
+    print irc.recv(4096)
+    join(chan1)
+    print irc.recv(4096)
+    
+    msg = '!%s' % clientID
+    for cmd in command:
+        msg += '..'
+        msg += re.sub(' ', '..', cmd)
+    
+    irc.send('PRIVMSG #%s %s\r\n' % (chan1, msg))
+    
 
 def getClientInfo(lPowerLvl, HPowerLvl):
     try:
@@ -278,11 +266,11 @@ def checkPowerlvl(lvl, lPowerLvl, HPowerLvl):
         return None
     
 
-def createBFtable(hashName, charset):
+def createBFtable(hashName):
     hashName = ''.join(hashName.split('-'))
     tableName = hashName+'bftable'
-    if not charset:
-        charset = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /"
+    
+    charset = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /"
 
     bftable = []
     for char in charset:
@@ -434,6 +422,5 @@ def getProgram(system, bits, gpuType):
     
     return program
 
- 
-    
+  
 main()

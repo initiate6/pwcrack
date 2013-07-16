@@ -29,14 +29,7 @@ def main():
             email = '.'.join(line.split('.')[1:])
             
     chan1 = 'pwc'+ '_'.join(nick.split('_')[1:])
-    print chan1
-    print nick
-    print system
-    print bits
-    print threads
-    print gpu
-    print password
-    print email
+    print chan1, nick, system, bits, threads, gpu, password, email
 
     connect(network, nick, chan, chan1, port, system, bits, threads, gpu, password, email)
     
@@ -81,7 +74,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                             )
 	retcode = process.poll()
 	while retcode == None:
-		stdoutdata, stderrdata = process.communicate('s')
+		stdoutdata, stderrdata = process.communicate(updateKey)
 		#if stderrdata:
 			#print stderrdata # switch to irc.send(stderrdata) and throw error
 		if stdoutdata:
@@ -101,6 +94,9 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 
 	#upload found file to FTP server.
 	#fileUpload(foundfile)
+		#if fileUplod doesn't work return False
+    
+	return True 
 
     
     	
@@ -114,6 +110,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
     join(chan)
     print irc.recv(4096)
     join(chan1)
+    
     state = 'standby'
     msg = '!register.'+nick+'.'+state+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
     ircmsg('PRIVMSG', chan, msg)
@@ -134,7 +131,13 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
             cmdline = ' '.join(cmd.split('..')[1:])
             #cmdline = re.sub('[\.]{2}', ' ', re.escape(str(cmd)))
             print "command before fuction: %s " % cmdline
-            command(cmdline)
+            if command(cmdline):
+                msg1 = '!update.'+nick+'.'+'ready'+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
+                ircmsg('PRIVMSG', chan1, msg1)
+            else:
+                msg2 = '!update.'+nick+'.'+'error'+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
+                ircmsg('PRIVMSG', chan1, msg2)
+                
             
         if data.find('!GITHASHES') != -1:
             if dlHashes() == 'Successful':
