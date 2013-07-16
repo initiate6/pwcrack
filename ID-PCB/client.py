@@ -2,9 +2,9 @@
 # -*- coding: utf8 -*-
 ############################################
 
-import socket, string, time, ssl
+import socket, string, ssl
 import urllib, re, os
-import datetime as dt
+import shlex
 
 def main():
      
@@ -59,15 +59,21 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
         irc.send('JOIN #%s \r\n' % channel)
         
     def command(cmd):
-	clientID = cmd[0].strip(':')
-	cmdline = ' '.join(cmd[1:])
-	print cmdline
+        import time
+        import datetime as dt
+        #cmdline = re.sub('..', ' ', cmd)
+        
+	#clientID = cmd[0].strip(':')
+	
+	#print "This is the commandline: %s " % cmdline
 	#sample command
 	#CID_536877610_549, Windows, 64bit, 2, ocl, -a 3, md5 -m 0, hash:plain, CID#W642ocla3m0.found , hashfile, [rules] Mask|wordlist
 	#send msg(!update with state flag set to busy to update rserver with client status)
 	#excute command on PC
 	
-	args = ("hashcat-plus64.exe", "-m 100", "-a 3", "-n 2", "A0.M100.hash", "?a?a?a?a?a")
+	args = shlex.split(cmdline)
+        print "This is the args: %s" % args
+        
 	process = AsyncPopen(args,
                             stdin=PIPE,
                             stdout=PIPE,
@@ -75,17 +81,17 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                             )
 	retcode = process.poll()
 	while retcode == None:
-		stdoutdata, stderrdata = process.communicate('\n')
-		if stderrdata:
-			print stderrdata # switch to irc.send(stderrdata) and throw error
+		stdoutdata, stderrdata = process.communicate('s')
+		#if stderrdata:
+			#print stderrdata # switch to irc.send(stderrdata) and throw error
 		if stdoutdata:
 			print stdoutdata # switch to irc.send(stdoutdata) to update room. 
 		time.sleep(5) #in seconds
 		#Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
-                date = dt.date.today()
-                time =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
+                date = dt.date.today().isoformat()
+                timeMinSec =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
                 if date == '2013-08-03':
-                    if float(time) >=  23.35:
+                    if float(timeMinSec) >=  23.35:
                         print "Time is up, closing and uploading what we have done so far"
                         #excute upload stuff. maybe just do a break.
                     else:
@@ -113,7 +119,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
     ircmsg('PRIVMSG', chan, msg)
 	
     while True:
-        data = irc.recv(4096)
+        data = irc.recv(8192)
         print data
 
 	if data.find('PING') != -1:
@@ -123,8 +129,12 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
             exit()#exits python.
             
 	if data.find('!%s' % (nick) ) != -1:
-            cmd = data.split()[3:]
-            command(cmd)
+            cmd = '!'.join(data.split('!')[2:])
+            print "cmd: %s " % cmd
+            cmdline = ' '.join(cmd.split('..')[1:])
+            #cmdline = re.sub('[\.]{2}', ' ', re.escape(str(cmd)))
+            print "command before fuction: %s " % cmdline
+            command(cmdline)
             
         if data.find('!GITHASHES') != -1:
             if dlHashes() == 'Successful':
