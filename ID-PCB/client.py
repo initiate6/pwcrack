@@ -67,7 +67,6 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                             )
 	retcode = process.poll()
 	while retcode == None:
-<<<<<<< HEAD
 		stdoutdata, stderrdata = process.communicate(updateKey)
 		#if stderrdata:
 			#print stderrdata # switch to irc.send(stderrdata) and throw error
@@ -83,7 +82,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                         #excute upload stuff. maybe just do a break.
                     else:
                         pass
-=======
+
             time.sleep(1) #in seconds
 	    stdoutdata, stderrdata = process.communicate('s')
 	    if stderrdata:
@@ -102,7 +101,6 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                 #stdoutdata, stderrdata = process.communicate('q')
             #else:
                 #pass
->>>>>>> a few changes to client and initalbrute
                         
 	    retcode = process.poll()
 
@@ -142,7 +140,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 	if data.find('!%s' % (nick) ) != -1:
             cmd = '!'.join(data.split('!')[2:])
             cmdline = ' '.join(cmd.split('..')[1:])
-<<<<<<< HEAD
+
             #cmdline = re.sub('[\.]{2}', ' ', re.escape(str(cmd)))
             print "command before fuction: %s " % cmdline
             if command(cmdline):
@@ -152,9 +150,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                 msg2 = '!update.'+nick+'.'+'error'+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
                 ircmsg('PRIVMSG', chan1, msg2)
                 
-=======
             command(cmdline)
->>>>>>> a few changes to client and initalbrute
             
         if data.find('!GITHASHES') != -1:
             if dlHashes() == 'Successful':
@@ -177,6 +173,8 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 def fileUpload(foundfile):
     print "file has been uploaded"
     #upload found file to FTP site
+    #User: DC214
+    #Pass: passwordcrackingcontest
     
 def dlHashes():
     return 'Successful'

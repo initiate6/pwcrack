@@ -169,8 +169,7 @@ class AsyncPopen(Popen):
             pass
         finally:
             pipe.close()
-    #works for windows. if doesn't work for *nix will have to grab the other _internal_poll
-    #from subprocess.py and do a if windows use this if linux use this.        
+            
     def poll(self):
         return self.returncode 
         
