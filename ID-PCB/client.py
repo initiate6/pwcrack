@@ -54,14 +54,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
     def command(cmd):
         import time
         import datetime as dt
-        #cmdline = re.sub('..', ' ', cmd)
         
-	#clientID = cmd[0].strip(':')
-	
-	#print "This is the commandline: %s " % cmdline
-	#sample command
-	#CID_536877610_549, Windows, 64bit, 2, ocl, -a 3, md5 -m 0, hash:plain, CID#W642ocla3m0.found , hashfile, [rules] Mask|wordlist
-	#send msg(!update with state flag set to busy to update rserver with client status)
 	#excute command on PC
 	
 	args = shlex.split(cmdline)
@@ -74,6 +67,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                             )
 	retcode = process.poll()
 	while retcode == None:
+<<<<<<< HEAD
 		stdoutdata, stderrdata = process.communicate(updateKey)
 		#if stderrdata:
 			#print stderrdata # switch to irc.send(stderrdata) and throw error
@@ -89,8 +83,28 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                         #excute upload stuff. maybe just do a break.
                     else:
                         pass
+=======
+            time.sleep(1) #in seconds
+	    stdoutdata, stderrdata = process.communicate('s')
+	    if stderrdata:
+                print stderrdata # switch to irc.send(stderrdata) and throw error
+	    if stdoutdata:
+                #ircmsg('PRIVMSG', chan1, stdoutdata)
+                print stdoutdata # switch to irc.send(stdoutdata) to update room. 
+		
+	    #Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
+            #date = dt.date.today().isoformat()
+            #timeMinSec =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
+            #if date == '2013-08-03':
+		#if float(timeMinSec) >=  23.35:
+		#print "Time is up, closing and uploading what we have done so far"
+                #excute upload stuff. maybe just do a break.
+                #stdoutdata, stderrdata = process.communicate('q')
+            #else:
+                #pass
+>>>>>>> a few changes to client and initalbrute
                         
-		retcode = process.poll()
+	    retcode = process.poll()
 
 	#upload found file to FTP server.
 	#fileUpload(foundfile)
@@ -116,7 +130,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
     ircmsg('PRIVMSG', chan, msg)
 	
     while True:
-        data = irc.recv(8192)
+        data = irc.recv(4096)
         print data
 
 	if data.find('PING') != -1:
@@ -127,8 +141,8 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
             
 	if data.find('!%s' % (nick) ) != -1:
             cmd = '!'.join(data.split('!')[2:])
-            print "cmd: %s " % cmd
             cmdline = ' '.join(cmd.split('..')[1:])
+<<<<<<< HEAD
             #cmdline = re.sub('[\.]{2}', ' ', re.escape(str(cmd)))
             print "command before fuction: %s " % cmdline
             if command(cmdline):
@@ -138,6 +152,9 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                 msg2 = '!update.'+nick+'.'+'error'+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
                 ircmsg('PRIVMSG', chan1, msg2)
                 
+=======
+            command(cmdline)
+>>>>>>> a few changes to client and initalbrute
             
         if data.find('!GITHASHES') != -1:
             if dlHashes() == 'Successful':

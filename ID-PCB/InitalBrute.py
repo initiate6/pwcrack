@@ -131,7 +131,6 @@ def buildcmd(user, hashName):
 
 def sendCMD(clientID, command):
     import socket, string, ssl, re, os
-    #some functions to help repetitive task in connect()
 
     def join(channel):
         irc.send('JOIN #%s \r\n' % channel)

@@ -217,7 +217,7 @@ def getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ram
         gpuPts = gpuLookup(gpuDesc)
         points += int(gpuPts)
         
-        gpuRamPts = (gpuMem / 1024 / 1024) * 2
+        gpuRamPts = (int(gpuMem) / 1024 / 1024) * 2
         points += int(gpuRamPts)
 
     rand = random.randint(000,999)
