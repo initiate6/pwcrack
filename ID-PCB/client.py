@@ -67,22 +67,6 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                             )
 	retcode = process.poll()
 	while retcode == None:
-		stdoutdata, stderrdata = process.communicate(updateKey)
-		#if stderrdata:
-			#print stderrdata # switch to irc.send(stderrdata) and throw error
-		if stdoutdata:
-			print stdoutdata # switch to irc.send(stdoutdata) to update room. 
-		time.sleep(5) #in seconds
-		#Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
-                date = dt.date.today().isoformat()
-                timeMinSec =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
-                if date == '2013-08-03':
-                    if float(timeMinSec) >=  23.35:
-                        print "Time is up, closing and uploading what we have done so far"
-                        #excute upload stuff. maybe just do a break.
-                    else:
-                        pass
-
             time.sleep(1) #in seconds
 	    stdoutdata, stderrdata = process.communicate('s')
 	    if stderrdata:
