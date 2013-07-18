@@ -55,11 +55,11 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
         import time
         import datetime as dt
         
-	#excute command on PC
-	
+	#split up string into arguments.
 	args = shlex.split(cmdline)
         print "This is the args: %s" % args
         
+        #excute command
 	process = AsyncPopen(args,
                             stdin=PIPE,
                             stdout=PIPE,
@@ -89,8 +89,8 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 	    retcode = process.poll()
 
 	#upload found file to FTP server.
-	#fileUpload(foundfile)
-		#if fileUplod doesn't work return False
+	ftpUpload(foundfile, system)
+	
     
 	return True 
 
@@ -136,35 +136,90 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                 
             command(cmdline)
             
-        if data.find('!GITHASHES') != -1:
-            if dlHashes() == 'Successful':
-                break
-            elif dlHashes() == 'Successful':
-                break
-            else:
-                print "something went wrong downloading hash files "
+        if data.find('!GET') != -1:
+            output = '!'.join(data.split('!')[2:])
+            filename = '.'.join(output.split('.')[1:]).strip('\r\n')
+            ftpDownload(filename, system)
                 
-        if data.find('!GITWORDLIST') != -1:
-            if dlWordlist() == 'Successful':
-                break
-            elif dlwordlist() == 'Successful':
-                break
-            else:
-                print "something went wrong downloading hash files "
-                
+        if data.find('!PUSH') != -1:
+            output = '!'.join(data.split('!')[2:])
+            filename = '.'.join(output.split('.')[1:]).strip('\r\n')
+            ftpUpload(filename, system)
+            
         print data
 
-def fileUpload(foundfile):
-    print "file has been uploaded"
-    #upload found file to FTP site
-    #User: DC214
-    #Pass: passwordcrackingcontest
-    
-def dlHashes():
-    return 'Successful'
 
-def dlWordlist():
-    return 'Successful'
 
+def ftpUpload(filename, system):
     
+    from ftplib import FTP_TLS
+    import os
+
+    zipFilename = compressit(filename, system)
+    
+    ftps = FTP_TLS()
+    ftps.connect('pwcrack.init6.me', '21')
+    ftps.auth()
+    ftps.login('DC214', 'passwordcrackingcontest')
+    ftps.prot_p()
+    ftps.set_pasv(True)
+    local_file = open(zipFilename, 'rb')
+    ftps.storbinary('STOR '+zipFilename, local_file)
+
+    print "file %s has been uploaded." % zipFilename
+    
+def ftpDownload(filename, system):
+    from ftplib import FTP_TLS
+    import os
+    
+    ftps = FTP_TLS()
+    ftps.connect('pwcrack.init6.me', '21')
+    ftps.auth()
+    ftps.login('DC214', 'passwordcrackingcontest')
+    ftps.prot_p()
+    ftps.set_pasv(True)
+    local_filename = filename
+    with open(local_filename, 'wb') as f:
+        def callback(data):
+            f.write(data)
+        ftps.retrbinary('RETR %s' % filename, callback)
+
+    status = decompressit(local_filename, system)
+    if status:
+        print "file %s hash been downloaded." % local_filename
+
+
+def compressit(filename, system):
+    from subprocess import Popen, PIPE
+    
+    zipFilename = str(filename.split('.')[0]) + '.7z'
+
+    if system == 'Windows':
+        args = '7za.exe', 'a', zipFilename, filename
+    if system == 'Linux':
+        args = './7za', 'a', zipFilename, filename
+
+    compressFile = Popen(args, stdout=PIPE)
+    output = compressFile.communicate()[0]
+    
+    if re.search("Everything is Ok", output):
+        return zipFilename
+    else:
+        print "something went wrong compressing %s" % filename
+        
+def decompressit(zipFilename, system):
+    from subprocess import Popen, PIPE
+
+    if system == 'Windows':
+        args = '7za.exe', 'x', zipFilename
+    if system == 'Linux':
+        args = './7za', 'x', zipFilename
+        
+    decompressFile = Popen(args, stdout=PIPE)
+    output = decompressFile.communicate()[0]
+    
+    if re.search("Everything is Ok", output):
+        return True
+    else:
+        print "something went wrong compressing %s" % filename    
 main()
