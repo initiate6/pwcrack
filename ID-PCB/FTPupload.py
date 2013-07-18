@@ -11,8 +11,7 @@ def ftpUpload(filename):
     ftps.prot_p()
     ftps.set_pasv(True)
     local_file = open(filename, 'rb')
-    blocksize = 8192
-    ftps.storbinary('STOR %s', local_file % filename) 
+    ftps.storbinary('STOR '+filename, local_file)
 
 
 ftpUpload(filename)

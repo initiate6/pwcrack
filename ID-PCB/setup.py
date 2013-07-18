@@ -11,6 +11,7 @@ import random
 system = platform.system()
 if system == 'Windows':
     import _winreg
+    from subprocess import Popen, PIPE
 if system == 'Linux':
     import subprocess
 
@@ -75,17 +76,14 @@ def checkBits():
     else:
         return "32bit"
 
-#get RAM info on WIndows Computers. Some lock up python.exe but finish.
-#change to winshell thingy
 def winGetRAMinfo():
-    try:
-        from winmem import winmem
-        m = winmem()
-        return m.dwTotalPhys/1024**2
+    args = 'wmic', 'computersystem', 'get', 'TotalPhysicalMemory'
+    getRam = Popen(args, stdout=PIPE)
+    output = getRam.communicate()[0]
+    rambytes = int(output.split()[1])
+    ramMB = rambytes / 1024 / 1024 / 1024
+    return ramMB
     
-    except:
-        print "Ram info got messed up"
-
 #Get CPU info on Windows computers.
 def winGetCPUinfo():
     """Retrieves Machine information from the registry"""
