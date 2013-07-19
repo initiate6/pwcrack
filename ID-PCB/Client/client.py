@@ -55,10 +55,35 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
         import time
         import datetime as dt
         
+        charset1 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /"
+        charset2 = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /\ñ"
+
 	#split up string into arguments.
 	args = shlex.split(cmdline)
         print "This is the args: %s" % args
-        
+        statusKey = '\n'
+
+        #Get the file name for the found passwords, and change the status key to 's' if gpu based.
+        for arg in args:
+            if re.search('found', arg):
+                foundfile = arg
+            if re.search('plus', arg):
+                statusKey = 's'
+            if re.search('charset', arg):
+                if arg == 'charset1':
+                    charset = charset1
+                    index = args.index(arg)
+                    args.remove(arg)
+                    args.insert(index, charset1)
+            
+                if arg == 'charset2':
+                    charset = charset2
+                    index = args.index(arg)
+                    args.remove(arg)
+                    args.insert(index, charset2)
+
+                
+                
         #excute command
 	process = AsyncPopen(args,
                             stdin=PIPE,
@@ -66,25 +91,28 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                             stderr=PIPE
                             )
 	retcode = process.poll()
+	
 	while retcode == None:
             time.sleep(1) #in seconds
-	    stdoutdata, stderrdata = process.communicate('s')
+	    stdoutdata, stderrdata = process.communicate(statusKey)
 	    if stderrdata:
                 print stderrdata # switch to irc.send(stderrdata) and throw error
 	    if stdoutdata:
-                #ircmsg('PRIVMSG', chan1, stdoutdata)
+                ircmsg('PRIVMSG', chan1, stdoutdata)
                 print stdoutdata # switch to irc.send(stdoutdata) to update room. 
 		
 	    #Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
-            #date = dt.date.today().isoformat()
-            #timeMinSec =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
-            #if date == '2013-08-03':
-		#if float(timeMinSec) >=  23.35:
-		#print "Time is up, closing and uploading what we have done so far"
-                #excute upload stuff. maybe just do a break.
-                #stdoutdata, stderrdata = process.communicate('q')
-            #else:
-                #pass
+            date = dt.date.today().isoformat()
+            timeMinSec =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
+            if date == '2013-08-03':
+		if float(timeMinSec) >=  23.35:
+                    print "Time is up, closing and uploading what we have done so far"
+                    if statusKey == 's':
+                        stdoutdata, stderrdata = process.communicate('q')
+                    else:
+                        process.terminate()
+            else:
+                pass
                         
 	    retcode = process.poll()
 

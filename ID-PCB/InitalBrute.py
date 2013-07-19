@@ -1,24 +1,68 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import string, time, ssl, sys
+import string, time, sys
 import urllib, re, os, sqlite3
 
 def main():
-    import socket
-    #some functions to help repetitive task in connect()
+    import socket, ssl
+    #some functions
     def sendMsg(ircCMD, channel, msg):
         irc.send('%s #%s %s\r\n' % (ircCMD, channel, msg))
     def join(channel):
         irc.send('JOIN #%s \r\n' % channel)
-    
+
+    def controller():
+        #how many clients do you want working on this program and power level.
+        clients = 3
+        lPowerLvl = 5  #1-11  1 being crappy and 11 being really good.
+        HPowerLvl = 8
+
+        users = {}
+
+        
+        hashes = [ 'raw-md5', 'raw-sha1', 'raw-md4', 'mysql-sha1', 'ntlm', 'nsldap', 'raw-md5u' ]
+        for hashName in hashes:
+            createBFtable(hashName)
+        
+            for client in range(clients):
+
+                clientID, state, system, bits, gpuType = getClientInfo(lPowerLvl, HPowerLvl)
+                program = getProgram(system, bits, gpuType)
+                users[client] = []
+                users[client].append(clientID)
+                users[client].append(state)
+                users[client].append(system)
+                users[client].append(bits)
+                users[client].append(gpuType)
+                users[client].append(program)
+            
+            while True:
+                for user in range(len(users)):
+                    name = int(user)
+                    if checkClientState(users[name][0]) == 'ready':
+                        clientID, command = buildcmd(users[name], hashName)
+                        updateClient(clientID, 'busy')
+                        #sendCMD(clientID, command)
+
+                        chan1 = 'pwc'+'_'.join(clientID.split('_')[1:])
+                        msg = '!%s' % clientID
+                        for cmd in command:
+                            msg += '..'
+                            msg += re.sub(' ', '..', cmd)
+                            
+                        print "this is the command being sent to the client: %s" % msg
+                        cmd = 'PRIVMSG'
+                        sendMsg('%s #%s %s\r\n' % (cmd, chan1, msg))
+                        
+
+        
+        
     network = 'irc.init6.me'
     chan = 'pwcrack'
     port = 16667
     nick = 'InitalBrute'
 
-    #test function
-    controller()
 
     socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket.connect((network,port))
@@ -43,43 +87,6 @@ def main():
             controller()
 
         print data
-
-
-
-def controller():
-
-    
-    #how many clients do you want working on this program and power level.
-    clients = 3
-    lPowerLvl = 5  #1-11  1 being crappy and 11 being really good.
-    HPowerLvl = 8
-
-    users = {}
-
-    
-    hashes = [ 'raw-md5', 'raw-sha1', 'raw-md4', 'mysql-sha1', 'ntlm', 'nsldap', 'raw-md5u' ]
-    for hashName in hashes:
-        createBFtable(hashName)
-    
-        for client in range(clients):
-
-            clientID, state, system, bits, gpuType = getClientInfo(lPowerLvl, HPowerLvl)
-            program = getProgram(system, bits, gpuType)
-            users[client] = []
-            users[client].append(clientID)
-            users[client].append(state)
-            users[client].append(system)
-            users[client].append(bits)
-            users[client].append(gpuType)
-            users[client].append(program)
-        
-        while True:
-            for user in range(len(users)):
-                name = int(user)
-                if checkClientState(users[name][0]) == 'ready':
-                    clientID, command = buildcmd(users[name], hashName)
-                    updateClient(users[name][0], 'busy')
-                    sendCMD(clientID, command)
 
 
 def buildcmd(user, hashName):
@@ -129,34 +136,6 @@ def buildcmd(user, hashName):
     command.append(bruteforce)
     return clientID, command
 
-def sendCMD(clientID, command):
-    import socket, string, ssl, re, os
-
-    def join(channel):
-        irc.send('JOIN #%s \r\n' % channel)
-    
-    network = 'irc.init6.me'
-    chan1 = 'pwc'+'_'.join(clientID.split('_')[1:])
-    port = 16667
-    nick = 'sendingCMD'
-
-    socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    socket.connect((network,port))
-    irc = ssl.wrap_socket(socket)
-    irc.send('NICK %s\r\n' % nick)
-    print irc.recv(4096)
-    irc.send('USER %s %s %s :My bot\r\n' % (nick,nick,nick))
-    print irc.recv(4096)
-    join(chan1)
-    print irc.recv(4096)
-    
-    msg = '!%s' % clientID
-    for cmd in command:
-        msg += '..'
-        msg += re.sub(' ', '..', cmd)
-    
-    irc.send('PRIVMSG #%s %s\r\n' % (chan1, msg))
-    
 
 def getClientInfo(lPowerLvl, HPowerLvl):
     try:
@@ -269,10 +248,14 @@ def createBFtable(hashName):
     hashName = ''.join(hashName.split('-'))
     tableName = hashName+'bftable'
     
-    charset = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /"
+    charset1 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /"
+    #charset2 = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /\ñ"
+    
+    charset = 'charset1'
+    #charset = 'charset2'
 
     bftable = []
-    for char in charset:
+    for char in charset1:
         bftable.append( (char, charset, 'incomplete') )
         
     try:
@@ -340,8 +323,6 @@ def bfupdate(hashName, bfstart, status):
 
             for row in rows:
                 if re.match(bfstart,row[0]):
-                    #print "update bftable: %s starting with: %s with new status %s" % (tableName, bfstart, status)
-                    #if this doesn't work create update line and pass that in.
                     cur.execute("UPDATE "+tableName+" SET status=? WHERE start=?",(status, bfstart))
 
                     conn.commit()
