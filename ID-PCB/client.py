@@ -171,7 +171,7 @@ def ftpUpload(filename, system):
 def ftpDownload(filename, system):
     from ftplib import FTP_TLS
     import os
-    
+
     ftps = FTP_TLS()
     ftps.connect('pwcrack.init6.me', '21')
     ftps.auth()
@@ -183,11 +183,15 @@ def ftpDownload(filename, system):
         def callback(data):
             f.write(data)
         ftps.retrbinary('RETR %s' % filename, callback)
+    f.close()
 
-    status = decompressit(local_filename, system)
-    if status:
-        print "file %s hash been downloaded." % local_filename
-
+    file_extension = str(filename.split('.')[1])
+    
+    if file_extension == '7z':
+        status = decompressit(local_filename, system)
+        if status:
+            print "file %s hash been downloaded." % local_filename
+    
 
 def compressit(filename, system):
     from subprocess import Popen, PIPE
@@ -196,12 +200,12 @@ def compressit(filename, system):
 
     if system == 'Windows':
         args = '7za.exe', 'a', zipFilename, filename
-    if system == 'Linux':
+    elif system == 'Linux':
         args = './7za', 'a', zipFilename, filename
 
     compressFile = Popen(args, stdout=PIPE)
     output = compressFile.communicate()[0]
-    
+
     if re.search("Everything is Ok", output):
         return zipFilename
     else:
@@ -211,9 +215,9 @@ def decompressit(zipFilename, system):
     from subprocess import Popen, PIPE
 
     if system == 'Windows':
-        args = '7za.exe', 'x', zipFilename
+        args = '7za.exe', 'x', '-y', zipFilename
     if system == 'Linux':
-        args = './7za', 'x', zipFilename
+        args = './7za', 'x', '-y', zipFilename
         
     decompressFile = Popen(args, stdout=PIPE)
     output = decompressFile.communicate()[0]
@@ -221,5 +225,6 @@ def decompressit(zipFilename, system):
     if re.search("Everything is Ok", output):
         return True
     else:
-        print "something went wrong compressing %s" % filename    
+        print "something went wrong decompressing %s" % zipFilename
+        
 main()
