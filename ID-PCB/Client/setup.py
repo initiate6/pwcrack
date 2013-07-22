@@ -274,46 +274,46 @@ def download(ClientID, system, bits, gpuType):
     if system == "Windows":
         if gpuType == "ocl":
 	    if bits == "32bit":
-	        ftpDownload('win.OCL32bit.7z', system)
+	        ftpDownload('win.ocl32bit.7z', system)
                         
 	    elif bits == "64bit":
-	        ftpDownload('win.OCL64bit.7z', system)
+	        ftpDownload('win.ocl64bit.7z', system)
                     
 	if gpuType == "cuda":
 	    if bits == "32bit":
-	        ftpDownload('win.CUDA32bit.7z', system)
+	        ftpDownload('win.cuda32bit.7z', system)
                     
 	    elif bits == "64bit":
-	        ftpDownload('win.Cuda64bit.7z', system)
+	        ftpDownload('win.cuda64bit.7z', system)
                     
 	if gpuType == "None":
 	    if bits == "32bit":
-	        ftpDownload('win.HC32bit.7z', system)
+	        ftpDownload('win.hashcat32bit.7z', system)
                     
 	    elif bits == "64bit":
-	        ftpDownload('win.HC32bit.7z', system)
+	        ftpDownload('win.hashcat64bit.7z', system)
                     
     if system == "Linux":
         if gpuType == "ocl":
 	    if bits == "32bit":
-	        ftpDownload('lin.OCL32bit.7z', system)
+	        ftpDownload('lin.ocl32bit.7z', system)
                     
 	    elif bits == "64bit":
-	        ftpDownload('lin.OCL64bit.7z', system)
+	        ftpDownload('lin.ocl64bit.7z', system)
                     
 	if gpuType == "cuda":
 	    if bits == "32bit":
-	        ftpDownload('lin.CUDA32bit.7z', system)
+	        ftpDownload('lin.cuda32bit.7z', system)
                     
 	    elif bits == "64bit":
-	        ftpDownload('lin.CUDA64bit.7z', system)
+	        ftpDownload('lin.cuda64bit.7z', system)
                     
 	if gpuType == "None":
 	    if bits == "32bit":
-	        ftpDownload('lin.HC32bit.7z', system)
+	        ftpDownload('lin.hashcat32bit.7z', system)
                     
 	    elif bits == "64bit":
-	        ftpDownload('lin.HC64bit.7z', system)
+	        ftpDownload('lin.hashcat64bit.7z', system)
                     
     if system == "Darwin":
         print "nothing here"
@@ -321,7 +321,6 @@ def download(ClientID, system, bits, gpuType):
 def ftpDownload(filename, system):
     from ftplib import FTP_TLS
     import os
-    print "In ftpDownload()"
     
     ftps = FTP_TLS()
     ftps.connect('pwcrack.init6.me', '21')
@@ -332,6 +331,7 @@ def ftpDownload(filename, system):
     local_filename = filename
     with open(local_filename, 'wb') as f:
         def callback(data):
+            print "Downloading %s ..." % filename
             f.write(data)
         ftps.retrbinary('RETR %s' % filename, callback)
     f.close()
