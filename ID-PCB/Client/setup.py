@@ -29,7 +29,7 @@ def main():
         password = getPassword( ClientID, system, bits, gpuType )
         writeit(ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, password, email)
         #downloads don't work because I haven't uploaded all the packages yet
-	#download(ClientID, system, bits, gpuType)
+	download(ClientID, system, bits, gpuType)
         
     if system == 'Linux':
         bits = checkBits()
@@ -40,7 +40,7 @@ def main():
         password = getPassword( ClientID, system, bits, gpuType )
 	writeit(ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, password, email)
 	#downloads don't work because I haven't uploaded all the packages yet
-	#download(ClientID, system, bits, gpuType
+	download(ClientID, system, bits, gpuType)
 	      
 
     if system == 'Darwin':
@@ -222,7 +222,7 @@ def getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ram
 
     return ("CID"+"_"+str(points)+"_"+str(rand))
 
-#needs a lot of work. Check for different types of GPU cards and give it points.
+
 def gpuLookup(card):
     points = 0
     try:
@@ -271,80 +271,94 @@ def gpuLookup(card):
 
 
 def download(ClientID, system, bits, gpuType):
-    try:
-        
-        import urllib2
-
-        def saveit(filename, fileobj):
-            print "this is the file name %s" % filename
-            f = open(filename,'w')
-            f.write(fileobj.read())
-            f.close()        
-            
-        
-        if system == "Windows":
-            if gpuType == "ocl":
-                if bits == "32bit":
-                    winOCL32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.32bit.7z")
-                    saveit('winOCL32bit.7z', winOCL32bit)
+    if system == "Windows":
+        if gpuType == "ocl":
+	    if bits == "32bit":
+	        ftpDownload('win.OCL32bit.7z', system)
                         
-                elif bits == "64bit":
-                    winOCL64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.ocl.64bit.7z")
-                    saveit('winOCL64bit.7z', winOCL64bit)
+	    elif bits == "64bit":
+	        ftpDownload('win.OCL64bit.7z', system)
                     
-            if gpuType == "cuda":
-                if bits == "32bit":
-                    winCUDA32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.cuda.32bit.7z")
-                    saveit('winCUDA32bit.7z', winCUDA32bit)
+	if gpuType == "cuda":
+	    if bits == "32bit":
+	        ftpDownload('win.CUDA32bit.7z', system)
                     
-                elif bits == "64bit":
-                    winCUDA64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.cuda.64bit.7z")
-                    saveit('winCuda64bit.7z', winCUDA64bit)
+	    elif bits == "64bit":
+	        ftpDownload('win.Cuda64bit.7z', system)
                     
-            if gpuType == "None":
-                if bits == "32bit":
-                    winHC32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.hashcat.32bit.7z")
-                    saveit('winHC32bit.7z', winHC32bit)
+	if gpuType == "None":
+	    if bits == "32bit":
+	        ftpDownload('win.HC32bit.7z', system)
                     
-                elif bits == "64bit":
-                    winHC64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/win.hashcat.64bit.7z")
-                    saveit('winHC32bit.7z', winHC64bit)
+	    elif bits == "64bit":
+	        ftpDownload('win.HC32bit.7z', system)
                     
-        if system == "Linux":
-            if gpuType == "ocl":
-                if bits == "32bit":
-                    linOCL32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.32bit.7z")
-                    saveit('linOCL32bit.7z', linOCL32bit)
+    if system == "Linux":
+        if gpuType == "ocl":
+	    if bits == "32bit":
+	        ftpDownload('lin.OCL32bit.7z', system)
                     
-                elif bits == "64bit":
-                    linOCL64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.ocl.64bit.7z")
-                    saveit('linOCL64bit.7z', linOCL64bit)
+	    elif bits == "64bit":
+	        ftpDownload('lin.OCL64bit.7z', system)
                     
-            if gpuType == "cuda":
-                if bits == "32bit":
-                    linCUDA32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.cuda.32bit.7z")
-                    saveit('linCUDA32bit.7z', linCUDA32bit)
+	if gpuType == "cuda":
+	    if bits == "32bit":
+	        ftpDownload('lin.CUDA32bit.7z', system)
                     
-                elif bits == "64bit":
-                    linCUDA64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.cuda.64bit.7z")
-                    saveit('linCUDA64bit.7z', linCUDA64bit)
+	    elif bits == "64bit":
+	        ftpDownload('lin.CUDA64bit.7z', system)
                     
-            if gpuType == "None":
-                if bits == "32bit":
-                    linHC32bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.hashcat.32bit.7z")
-                    saveit('linHC32bit.7z', linHC32bit)
+	if gpuType == "None":
+	    if bits == "32bit":
+	        ftpDownload('lin.HC32bit.7z', system)
                     
-                elif bits == "64bit":
-                    linHC64bit = urllib2.urlopen("http://cookie.baconseed.org/~cookie/lin.hashcat.64bit.7z")
-                    saveit('linHC64bit.7z', linHC64bit)
+	    elif bits == "64bit":
+	        ftpDownload('lin.HC64bit.7z', system)
                     
-        if system == "Darwin":
-            print "nothing here"
+    if system == "Darwin":
+        print "nothing here"
 
-    except:
-        print "something went wrong downloading the files"
+def ftpDownload(filename, system):
+    from ftplib import FTP_TLS
+    import os
+    print "In ftpDownload()"
+    
+    ftps = FTP_TLS()
+    ftps.connect('pwcrack.init6.me', '21')
+    ftps.auth()
+    ftps.login('DC214', 'passwordcrackingcontest')
+    ftps.prot_p()
+    ftps.set_pasv(True)
+    local_filename = filename
+    with open(local_filename, 'wb') as f:
+        def callback(data):
+            f.write(data)
+        ftps.retrbinary('RETR %s' % filename, callback)
+    f.close()
 
+    file_extension = str(filename.rsplit('.')[2])
+    
+    if file_extension == '7z':
+        status = decompressit(local_filename, system)
+        if status:
+            print "file %s hash been downloaded." % local_filename
 
+def decompressit(zipFilename, system):
+    from subprocess import Popen, PIPE
+
+    if system == 'Windows':
+        args = '7za.exe', 'x', '-y', zipFilename
+    if system == 'Linux':
+        args = './7za', 'x', '-y', zipFilename
+        
+    decompressFile = Popen(args, stdout=PIPE)
+    output = decompressFile.communicate()[0]
+    
+    if re.search("Everything is Ok", output):
+        return True
+    else:
+        print "something went wrong decompressing %s" % zipFilename
+            
 def getPassword( ClientID, system, bits, gpuType ):
     var = "DC214"
     if not gpuType:
@@ -414,8 +428,7 @@ def linGetGPUinfo():
 	
     def getdevicename(device):
         result = device.split(':')
-	return result[len(result)-1]
-        
+        return result[len(result)-1]
         
     lspci_process = subprocess.Popen(['lspci'], 
                                         stdout=subprocess.PIPE)
@@ -449,12 +462,11 @@ def linGetGPUinfo():
 	    deviceName = None
 	    gpuMem = None
 	    return gpuType, deviceName,  gpudriver, gpuMem
-            
 
 def linGetCPUinfo():
     import subprocess
     cpuInfo = []
-
+    
     cat_process = subprocess.Popen(['cat', '/proc/cpuinfo'],
                                         stdout=subprocess.PIPE)
 
@@ -466,9 +478,7 @@ def linGetCPUinfo():
 		            stdin=grep_process.stdout,
 		            stdout=subprocess.PIPE)
 
-
-    stdoutdata = cut_process.communicate()[0]
-		
+    stdoutdata = cut_process.communicate()[0]	
     temp = []
     for item in stdoutdata.split('\n'):
         temp.append(item.strip())
@@ -485,7 +495,6 @@ def linGetCPUinfo():
         cpuInfo.append(last)
         return cpuInfo
 
-
 def linGetRAMinfo():
     import subprocess
     cat_process = subprocess.Popen(['cat', '/proc/meminfo'], 
@@ -499,13 +508,8 @@ def linGetRAMinfo():
 					stdin=grep_process.stdout, 
 					stdout=subprocess.PIPE)
 
-
     stdoutdata = awk_process.communicate()[0]
     ramsize = int(stdoutdata) / 1024 / 1024
-    #print "ram size in GB %s" % ramsize
     return ramsize
-
- 
- 
  
 main()

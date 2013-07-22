@@ -6,9 +6,13 @@ import urllib, re, os, sqlite3
 
 def main():
     import socket, ssl
-    #some functions
-    def sendMsg(ircCMD, channel, msg):
-        irc.send('%s #%s %s\r\n' % (ircCMD, channel, msg))
+    
+    def sendMsg(channel, msg):
+        print "inside send msg"
+        print channel, msg
+        irc.send('PRIVMSG #%s %s\r\n' % (channel, msg))
+        print irc.recv(4096)
+        
     def join(channel):
         irc.send('JOIN #%s \r\n' % channel)
 
@@ -51,9 +55,13 @@ def main():
                             msg += '..'
                             msg += re.sub(' ', '..', cmd)
                             
-                        print "this is the command being sent to the client: %s" % msg
-                        cmd = 'PRIVMSG'
-                        sendMsg('%s #%s %s\r\n' % (cmd, chan1, msg))
+                            
+                        #print "this is the command being sent to the client: %s" % msg
+                        #print "this is the channel sending to: %s" % chan1
+                        #irccmd = 'PRIVMSG'
+                        join(chan1)
+                        sendMsg(chan1, msg)
+                        #irc.send('PRIVMSG #'+str(chan1)+' '+str(msg)+' \r\n')
                         
 
         
@@ -85,7 +93,7 @@ def main():
             exit()#exits python.       
 	if data.find('!start') != -1:
             controller()
-
+            
         print data
 
 

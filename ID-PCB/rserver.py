@@ -69,8 +69,7 @@ def main():
             
         
         #print data
-        
-        #msg('PRIVMSG', chan, ".update")
+
     
 def createDB():
        

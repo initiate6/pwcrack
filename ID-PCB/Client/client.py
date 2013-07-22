@@ -55,12 +55,15 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
         import time
         import datetime as dt
         
-        charset1 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /"
-        charset2 = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /\ñ"
-
+        charset1 = "?l?u?d?s"
+        charset2 = "?l?u?d?s?h"
+        charset3 = "?l?u?d?s?D"
+        charset4 = "?l?u?d?s?F"
+        charset5 = "?l?u?d?s?R"
+        charset6 = "?l?u?d?s?h?D?F?R"
+        
 	#split up string into arguments.
 	args = shlex.split(cmdline)
-        print "This is the args: %s" % args
         statusKey = '\n'
 
         #Get the file name for the found passwords, and change the status key to 's' if gpu based.
@@ -74,15 +77,46 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                     charset = charset1
                     index = args.index(arg)
                     args.remove(arg)
-                    args.insert(index, charset1)
+                    args.insert(index, charset)
             
-                if arg == 'charset2':
+                elif arg == 'charset2':
                     charset = charset2
                     index = args.index(arg)
                     args.remove(arg)
-                    args.insert(index, charset2)
+                    args.insert(index, charset)
+                    
+                elif arg == 'charset3':
+                    charset = charset3
+                    index = args.index(arg)
+                    args.remove(arg)
+                    args.insert(index, charset)
+                    
+                elif arg == 'charset4':
+                    charset = charset4
+                    index = args.index(arg)
+                    args.remove(arg)
+                    args.insert(index, charset)
 
-                
+                elif arg == 'charset4':
+                    charset = charset4
+                    index = args.index(arg)
+                    args.remove(arg)
+                    args.insert(index, charset)
+                    
+                elif arg == 'charset5':
+                    charset = charset5
+                    index = args.index(arg)
+                    args.remove(arg)
+                    args.insert(index, charset)
+                    
+                elif arg == 'charset6':
+                    charset = charset6
+                    index = args.index(arg)
+                    args.remove(arg)
+                    args.insert(index, charset)
+                    
+                    
+        print "This is the args: %s" % args        
                 
         #excute command
 	process = AsyncPopen(args,
@@ -93,13 +127,14 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 	retcode = process.poll()
 	
 	while retcode == None:
-            time.sleep(1) #in seconds
+            time.sleep(5) #in seconds
 	    stdoutdata, stderrdata = process.communicate(statusKey)
 	    if stderrdata:
-                print stderrdata # switch to irc.send(stderrdata) and throw error
+                print stderrdata
 	    if stdoutdata:
-                ircmsg('PRIVMSG', chan1, stdoutdata)
-                print stdoutdata # switch to irc.send(stdoutdata) to update room. 
+                outdata = re.sub(' ', '..', stdoutdata)
+                ircmsg('PRIVMSG', chan1, outdata)
+                print outdata
 		
 	    #Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
             date = dt.date.today().isoformat()
@@ -109,8 +144,12 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                     print "Time is up, closing and uploading what we have done so far"
                     if statusKey == 's':
                         stdoutdata, stderrdata = process.communicate('q')
+                        ftpUpload(foundfile, system)
+                        return True
                     else:
                         process.terminate()
+                        ftpUpload(foundfile, system)
+                        return True
             else:
                 pass
                         
@@ -152,17 +191,14 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 	if data.find('!%s' % (nick) ) != -1:
             cmd = '!'.join(data.split('!')[2:])
             cmdline = ' '.join(cmd.split('..')[1:])
-
-            #cmdline = re.sub('[\.]{2}', ' ', re.escape(str(cmd)))
-            print "command before fuction: %s " % cmdline
+            
             if command(cmdline):
                 msg1 = '!update.'+nick+'.'+'ready'+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
                 ircmsg('PRIVMSG', chan1, msg1)
             else:
                 msg2 = '!update.'+nick+'.'+'error'+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
                 ircmsg('PRIVMSG', chan1, msg2)
-                
-            command(cmdline)
+
             
         if data.find('!GET') != -1:
             output = '!'.join(data.split('!')[2:])
