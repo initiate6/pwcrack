@@ -357,7 +357,7 @@ def decompressit(zipFilename, system):
         
     decompressFile = Popen(args, stdout=PIPE)
     output = decompressFile.communicate()[0]
-    
+    chmodBinaries()
     if re.search("Everything is Ok", output):
         return True
     else:
@@ -375,6 +375,11 @@ def getPassword( ClientID, system, bits, gpuType ):
 #LINUX ONLY FUNCTIONS
 #
 ############
+def chmodBinaries():
+    filenames = [ 'cudaHashcat-plus32.bin','cudaHashcat-plus64.bin', 'hashcat-cli32.bin', 'hashcat-cli64.bin', 'hashcat-cliAVX.bin', 'hashcat-cliXOP.bin', 'oclHashcat-plus32.bin', 'oclHashcat-plus64.bin'] 
+    for filename in filenames:
+        chmod = 'chmod', '+x', filename
+        chmod7zip = Popen(chmod, stdout=PIPE)
     
 def linGetGPUinfo():
 

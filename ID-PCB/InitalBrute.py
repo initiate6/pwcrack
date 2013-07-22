@@ -18,8 +18,8 @@ def main():
 
     def controller():
         #how many clients do you want working on this program and power level.
-        clients = 3
-        lPowerLvl = 5  #1-11  1 being crappy and 11 being really good.
+        clients = 1
+        lPowerLvl = 6  #1-11  1 being crappy and 11 being really good.
         HPowerLvl = 8
 
         users = {}
@@ -155,15 +155,16 @@ def getClientInfo(lPowerLvl, HPowerLvl):
             cur.execute("SELECT * FROM clients WHERE state='standby'")
             rows = cur.fetchall()
             for row in rows:
-                lvl = row[0].split('_')[1]
-                if checkPowerlvl(int(lvl), lPowerLvl, HPowerLvl):
-                    state = 'ready'
-                    clientID = row[0]
-                    system = row[2] #system
-                    bits = row[3] #bits
-                    gpuType = row[5] #gpuType
-                    updateClient(row[0], state )   
-                    return clientID, state, system, bits, gpuType
+                if row[5] != "None":
+                    lvl = row[0].split('_')[1]
+                    if checkPowerlvl(int(lvl), lPowerLvl, HPowerLvl):
+                        state = 'ready'
+                        clientID = row[0]
+                        system = row[2] #system
+                        bits = row[3] #bits
+                        gpuType = row[5] #gpuType
+                        updateClient(row[0], state )   
+                        return clientID, state, system, bits, gpuType
                     
                 #else:
                     #print "no clients in database within that powerlvl %s - %s. \
@@ -384,13 +385,15 @@ def getGPUSettings(gpuType, hashName):
         if conn:
             conn.close()
 
-def getProgram(system, bits, gpuType):    
+def getProgram(system, bits, gpuType):
+    print "in getProgram()"
+    print system, bits, gpuType
     if system == 'Windows':
         if bits == "32bit":
             if gpuType == "ocl":
                 program = "oclHashcat-plus32.exe"        
             elif gpuType == "cuda":
-                program = "cudaHashcat-Plus32.exe"   
+                program = "cudaHashcat-Plus32.exe"
         elif bits == "64bit":
             if gpuType == "ocl":
                 program = "oclHashcat-plus64.exe"

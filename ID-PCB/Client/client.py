@@ -64,7 +64,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
         
 	#split up string into arguments.
 	args = shlex.split(cmdline)
-        statusKey = '\n'
+        statusKey = '\r\n'
 
         #Get the file name for the found passwords, and change the status key to 's' if gpu based.
         for arg in args:
@@ -116,7 +116,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                     args.insert(index, charset)
                     
                     
-        print "This is the args: %s" % args        
+        print "This is the args: %s" % args
                 
         #excute command
 	process = AsyncPopen(args,
@@ -132,33 +132,39 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 	    if stderrdata:
                 print stderrdata
 	    if stdoutdata:
-                outdata = re.sub(' ', '..', stdoutdata)
-                ircmsg('PRIVMSG', chan1, outdata)
-                print outdata
+                if re.search('Speed|Recovered|Progress', stdoutdata):
+                    outdata = re.sub(' ', '..', stdoutdata)
+                    ircmsg('PRIVMSG', chan1, outdata)
+                print stdoutdata
 		
 	    #Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
-            date = dt.date.today().isoformat()
-            timeMinSec =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
-            if date == '2013-08-03':
-		if float(timeMinSec) >=  23.35:
-                    print "Time is up, closing and uploading what we have done so far"
-                    if statusKey == 's':
-                        stdoutdata, stderrdata = process.communicate('q')
-                        ftpUpload(foundfile, system)
-                        return True
-                    else:
-                        process.terminate()
-                        ftpUpload(foundfile, system)
-                        return True
-            else:
-                pass
-                        
+            #date = dt.date.today().isoformat()
+            #timeMinSec =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
+            #if date == '2013-08-03':
+		#if float(timeMinSec) >=  23.35:
+                    #print "Time is up, closing and uploading what we have done so far"
+                    #if statusKey == 's':
+                        #stdoutdata, stderrdata = process.communicate('q')
+                        #ftpUpload(foundfile, system)
+                        #process.terminate()
+                        #return True
+                    #else:
+                        #process.terminate()
+                        #ftpUpload(foundfile, system)
+                        #return True
+            #else:
+                #pass
+            
 	    retcode = process.poll()
+	    if retcode != None:
+                print "this is the last retcode %s" % retcode
+
+        print "out of while loop"
 
 	#upload found file to FTP server.
 	ftpUpload(foundfile, system)
 	
-    
+        
 	return True 
 
     
@@ -191,8 +197,9 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 	if data.find('!%s' % (nick) ) != -1:
             cmd = '!'.join(data.split('!')[2:])
             cmdline = ' '.join(cmd.split('..')[1:])
-            
-            if command(cmdline):
+
+            cmdStatus = command(cmdline)
+            if cmdStatus:
                 msg1 = '!update.'+nick+'.'+'ready'+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
                 ircmsg('PRIVMSG', chan1, msg1)
             else:

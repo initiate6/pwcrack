@@ -27,7 +27,6 @@ at the following URL: http://stackoverflow.com/questions/375427/
 '''
 
 from subprocess import PIPE, Popen
-import subprocess
 from threading  import Thread, Lock
 from warnings import warn
 import os
@@ -170,8 +169,8 @@ class AsyncPopen(Popen):
         finally:
             pipe.close()
             
-    def poll(self):
-        return self.returncode 
+    #def poll(self):
+        #return self.returncode 
         
     def communicate(self, input=None):
         '''
