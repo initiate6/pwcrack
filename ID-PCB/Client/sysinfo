@@ -1,4 +1,4 @@
-CID_7082_888
+CID_7082_828
 system.Windows
 bits.32bit
 cpu.0.AMD E-350 Processor.1596
@@ -8,5 +8,5 @@ gpuType.ocl
 gpu.AMD Radeon HD 6310 Graphics
 gpuDriver.13.1
 ram.3
-pass.Wd3o888DC214
+pass.Wd3o828DC214
 email.init6@init6.me

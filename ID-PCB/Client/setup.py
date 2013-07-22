@@ -341,7 +341,7 @@ def ftpDownload(filename, system):
     if file_extension == '7z':
         status = decompressit(local_filename, system)
         if status:
-            print "file %s hash been downloaded." % local_filename
+            print "file %s has been downloaded." % local_filename
 
 def decompressit(zipFilename, system):
     from subprocess import Popen, PIPE
