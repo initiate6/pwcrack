@@ -24,8 +24,8 @@ def main():
 
         users = {}
 
-        
-        hashes = [ 'raw-md5', 'raw-sha1', 'raw-md4', 'mysql-sha1', 'ntlm', 'nsldap', 'raw-md5u' ]
+        #, 'nsldap', 'raw-md5u'
+        hashes = [ 'raw-md5', 'raw-sha1', 'raw-md4', 'mysql-sha1', 'ntlm' ]
         for hashName in hashes:
             createBFtable(hashName)
         
