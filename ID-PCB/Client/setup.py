@@ -271,6 +271,7 @@ def gpuLookup(card):
 
 
 def download(ClientID, system, bits, gpuType):
+    
     if system == "Windows":
         if gpuType == "ocl":
 	    if bits == "32bit":
@@ -286,7 +287,7 @@ def download(ClientID, system, bits, gpuType):
 	    elif bits == "64bit":
 	        ftpDownload('win.cuda64bit.7z', system)
                     
-	if gpuType == "None":
+	if gpuType == None:
 	    if bits == "32bit":
 	        ftpDownload('win.hashcat32bit.7z', system)
                     
@@ -308,7 +309,7 @@ def download(ClientID, system, bits, gpuType):
 	    elif bits == "64bit":
 	        ftpDownload('lin.cuda64bit.7z', system)
                     
-	if gpuType == "None":
+	if gpuType == None:
 	    if bits == "32bit":
 	        ftpDownload('lin.hashcat32bit.7z', system)
                     
@@ -349,6 +350,9 @@ def decompressit(zipFilename, system):
     if system == 'Windows':
         args = '7za.exe', 'x', '-y', zipFilename
     if system == 'Linux':
+        chmod = 'chmod', '+x', '7za'
+        chmod7zip = Popen(chmod, stdout=PIPE)
+        chmodout = chmod7zip.communicate()[0]
         args = './7za', 'x', '-y', zipFilename
         
     decompressFile = Popen(args, stdout=PIPE)
