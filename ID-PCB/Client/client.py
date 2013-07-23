@@ -47,7 +47,8 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
     from async_subprocess import AsyncPopen, PIPE
 
     def ircmsg(ircCMD, channel, msg):
-        irc.send('%s #%s %s\r\n' % (ircCMD, channel, msg))
+        print '%s #%s %s \r\n' % (ircCMD, channel, msg)
+        irc.send('%s #%s %s \r\n' % (ircCMD, channel, msg))
     def join(channel):
         irc.send('JOIN #%s \r\n' % channel)
         
@@ -116,9 +117,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                     args.remove(arg)
                     args.insert(index, charset)
                     
-                    
-        print "This is the args: %s" % args
-                
+                               
         #excute command
 	process = AsyncPopen(args,
                             stdin=PIPE,
@@ -134,9 +133,12 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                 print stderrdata
 	    if stdoutdata:
                 if re.search('Speed|Recovered|Progress', stdoutdata):
-                    outdata = re.sub(' ', '..', stdoutdata)
-                    ircmsg('PRIVMSG', chan1, outdata)
-                print stdoutdata
+                    data = re.sub(' ', '..', stdoutdata)
+                    outdata = data.split('\n')
+                    for line in outdata:
+                        if line:
+                            ircmsg('PRIVMSG', chan1, line)
+                #print stdoutdata
 		
 	    #Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
             #date = dt.date.today().isoformat()
