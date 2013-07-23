@@ -214,7 +214,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                 
         if data.find('!PUSH') != -1:
             output = '!'.join(data.split('!')[2:])
-            filename = '.'.join(output.split('.')[1:]).strip('\r\n')
+            filename = '.'.join(output.split('.')[1:]).strip('\r\n').strip('\\').strip('/')
             ftpUpload(filename, system)
             
         print data
