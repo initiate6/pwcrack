@@ -127,16 +127,16 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 	retcode = process.poll()
 	print "first retcode: %s" % retcode
 	while retcode == None:
-            time.sleep(5) #in seconds
+            time.sleep(60) #in seconds
 	    stdoutdata, stderrdata = process.communicate(statusKey)
 	    if stderrdata:
                 print stderrdata
 	    if stdoutdata:
-                if re.search('Speed|Recovered|Progress', stdoutdata):
-                    data = re.sub(' ', '..', stdoutdata)
-                    outdata = data.split('\n')
-                    for line in outdata:
-                        if line:
+                data = re.sub(' ', '..', stdoutdata)
+                outdata = data.split('\n')
+                for line in outdata:
+                    if line:
+                        if re.search('Speed|Recovered|Progress', line):
                             ircmsg('PRIVMSG', chan1, line)
                 #print stdoutdata
 		
