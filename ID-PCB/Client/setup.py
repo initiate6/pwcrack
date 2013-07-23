@@ -376,10 +376,14 @@ def getPassword( ClientID, system, bits, gpuType ):
 #
 ############
 def chmodBinaries():
+    import os
+    from subprocess import Popen, PIPE
+    
     filenames = [ 'cudaHashcat-plus32.bin','cudaHashcat-plus64.bin', 'hashcat-cli32.bin', 'hashcat-cli64.bin', 'hashcat-cliAVX.bin', 'hashcat-cliXOP.bin', 'oclHashcat-plus32.bin', 'oclHashcat-plus64.bin'] 
     for filename in filenames:
-        chmod = 'chmod', '+x', filename
-        chmod7zip = Popen(chmod, stdout=PIPE)
+        if os.path.isfile(filename):
+            chmod = 'chmod', '+x', filename
+            chmod7zip = Popen(chmod, stdout=PIPE)
     
 def linGetGPUinfo():
 

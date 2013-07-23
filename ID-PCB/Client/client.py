@@ -52,6 +52,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
         irc.send('JOIN #%s \r\n' % channel)
         
     def command(cmd):
+        import os
         import time
         import datetime as dt
         
@@ -64,7 +65,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
         
 	#split up string into arguments.
 	args = shlex.split(cmdline)
-        statusKey = '\r\n'
+        statusKey = '\n'
 
         #Get the file name for the found passwords, and change the status key to 's' if gpu based.
         for arg in args:
@@ -125,7 +126,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                             stderr=PIPE
                             )
 	retcode = process.poll()
-	
+	print "first retcode: %s" % retcode
 	while retcode == None:
             time.sleep(5) #in seconds
 	    stdoutdata, stderrdata = process.communicate(statusKey)
@@ -162,7 +163,8 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
         print "out of while loop"
 
 	#upload found file to FTP server.
-	ftpUpload(foundfile, system)
+        if os.path.isfile(foundfile):
+            ftpUpload(foundfile, system)
 	
         
 	return True 
@@ -225,19 +227,20 @@ def ftpUpload(filename, system):
     
     from ftplib import FTP_TLS
     import os
+    if os.path.isfile(filename):
+        
+        zipFilename = compressit(filename, system)
+        
+        ftps = FTP_TLS()
+        ftps.connect('pwcrack.init6.me', '21')
+        ftps.auth()
+        ftps.login('DC214', 'passwordcrackingcontest')
+        ftps.prot_p()
+        ftps.set_pasv(True)
+        local_file = open(zipFilename, 'rb')
+        ftps.storbinary('STOR '+zipFilename, local_file)
 
-    zipFilename = compressit(filename, system)
-    
-    ftps = FTP_TLS()
-    ftps.connect('pwcrack.init6.me', '21')
-    ftps.auth()
-    ftps.login('DC214', 'passwordcrackingcontest')
-    ftps.prot_p()
-    ftps.set_pasv(True)
-    local_file = open(zipFilename, 'rb')
-    ftps.storbinary('STOR '+zipFilename, local_file)
-
-    print "file %s has been uploaded." % zipFilename
+        print "file %s has been uploaded." % zipFilename
     
 def ftpDownload(filename, system):
     from ftplib import FTP_TLS
