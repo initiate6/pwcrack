@@ -127,7 +127,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 	retcode = process.poll()
 	print "first retcode: %s" % retcode
 	while retcode == None:
-            time.sleep(60) #in seconds
+            time.sleep(5) #in seconds
 	    stdoutdata, stderrdata = process.communicate(statusKey)
 	    if stderrdata:
                 print stderrdata
@@ -141,38 +141,34 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                 #print stdoutdata
 		
 	    #Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
-            #date = dt.date.today().isoformat()
-            #timeMinSec =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
-            #if date == '2013-08-03':
-		#if float(timeMinSec) >=  23.35:
-                    #print "Time is up, closing and uploading what we have done so far"
-                    #if statusKey == 's':
-                        #stdoutdata, stderrdata = process.communicate('q')
-                        #ftpUpload(foundfile, system)
-                        #process.terminate()
-                        #return True
-                    #else:
-                        #process.terminate()
-                        #ftpUpload(foundfile, system)
-                        #return True
-            #else:
-                #pass
+            date = dt.date.today().isoformat()
+            timeMinSec =  '.'.join(str(dt.datetime.today()).split()[1].split(':')[:2])
+            if date == '2013-08-03':
+		if float(timeMinSec) >=  23.35:
+                    print "Time is up, closing and uploading what we have done so far"
+                    if statusKey == 's':
+                        stdoutdata, stderrdata = process.communicate('q')
+                        if os.path.isfile(foundfile):
+                            ftpUpload(foundfile, system)
+                        process.terminate()
+                        return True
+                    else:
+                        process.terminate()
+                        if os.path.isfile(foundfile):
+                            ftpUpload(foundfile, system)
+                        return True
+            else:
+                pass
             
 	    retcode = process.poll()
-	    if retcode != None:
-                print "this is the last retcode %s" % retcode
-
-        print "out of while loop"
 
 	#upload found file to FTP server.
         if os.path.isfile(foundfile):
             ftpUpload(foundfile, system)
 	
-        
 	return True 
 
-    
-    	
+
     socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     socket.connect((network,port))
     irc = ssl.wrap_socket(socket)
