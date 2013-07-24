@@ -8,10 +8,7 @@ def main():
     import socket, ssl
     
     def sendMsg(channel, msg):
-        print "inside send msg"
-        print channel, msg
         irc.send('PRIVMSG #%s %s\r\n' % (channel, msg))
-        print irc.recv(4096)
         
     def join(channel):
         irc.send('JOIN #%s \r\n' % channel)
@@ -19,13 +16,13 @@ def main():
     def controller():
         #how many clients do you want working on this program and power level.
         clients = 1
-        lPowerLvl = 6  #1-11  1 being crappy and 11 being really good.
-        HPowerLvl = 8
+        lPowerLvl = 1  #1-11  1 being crappy and 11 being really good.
+        HPowerLvl = 11
 
         users = {}
 
-        #, 'nsldap', 'raw-md5u'
-        hashes = [ 'raw-md5', 'raw-sha1', 'raw-md4', 'mysql-sha1', 'ntlm' ]
+        #, 'raw-md4', 'mysql-sha1', 'ntlm', 'nsldap', 'raw-md5u'
+        hashes = [ 'raw-md5', 'raw-sha1' ]
         for hashName in hashes:
             createBFtable(hashName)
         
@@ -42,34 +39,52 @@ def main():
                 users[client].append(program)
             
             while True:
+                data = irc.recv(2048)
+                print data
+
+                if data.find('PING') != -1:
+                    irc.send('PONG '+data.split()[1]+'\r\n')
+
+                if data.find('!TRACK') != -1:
+                    TrackOutput = '!'.join(data.split('!')[2:])
+                    tClientID = TrackOutput.split('.')[1]
+                    status = TrackOutput.split('.')[2]
+                    foundCount = TrackOutput.split('.')[3]
+                    
+                    updateTrackClient(tClientID, status, foundCount)
+
+                
+
                 for user in range(len(users)):
                     name = int(user)
                     if checkClientState(users[name][0]) == 'ready':
                         clientID, command = buildcmd(users[name], hashName)
                         updateClient(clientID, 'busy')
-                        #sendCMD(clientID, command)
+                        
 
                         chan1 = 'pwc'+'_'.join(clientID.split('_')[1:])
                         msg = '!%s' % clientID
                         for cmd in command:
                             msg += '..'
                             msg += re.sub(' ', '..', cmd)
-                            
-                            
-                        #print "this is the command being sent to the client: %s" % msg
-                        #print "this is the channel sending to: %s" % chan1
-                        #irccmd = 'PRIVMSG'
+                        
                         join(chan1)
                         sendMsg(chan1, msg)
-                        #irc.send('PRIVMSG #'+str(chan1)+' '+str(msg)+' \r\n')
-                        
+                        trackClient(clientID, msg)
 
-        
+        #When finished with all hashes need to reset the clients back to standby so they can be picked up again.
+        for user in range(len(users)):
+            name = int(user)
+            if checkClientState(users[name][0]) == 'ready':
+                updateClient(users[name][0], 'standby')
+                
+            
+
         
     network = 'irc.init6.me'
     chan = 'pwcrack'
     port = 16667
-    nick = 'InitalBrute'
+    nick = 'InitalBrute2'
 
 
     socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -222,7 +237,48 @@ def checkClientState(clientID):
         finally:
             if conn:
                 conn.close()
+                
+def trackClient(clientID, command):
+    status = 'working'
+    foundCount = 0
+    try:
+            
+        conn = sqlite3.connect('pwcrack.db')
 
+        with conn:
+
+            cur = conn.cursor()
+            cur.execute("INSERT INTO completed VALUES(?, ?, ?, ?)", (clientID, status, command, foundCount))
+
+    except sqlite3.Error, e:
+        print "Error updating completed %s:" % e.args[0]
+        sys.exit(1)
+
+    finally:
+        if conn:
+            conn.close()
+            
+def updateTrackClient(clientID, status, foundCount):
+
+    try:
+            
+        conn = sqlite3.connect('pwcrack.db')
+
+        with conn:
+
+            cur = conn.cursor()
+         
+            cur.execute("UPDATE INTO completed SET completed=?, found=? WHERE clientID=? AND completed='working'", (status, foundCount, clientID))
+                        
+            
+
+    except sqlite3.Error, e:
+        print "Error updating completed %s:" % e.args[0]
+        sys.exit(1)
+
+    finally:
+        if conn:
+            conn.close()                
 def checkPowerlvl(lvl, lPowerLvl, HPowerLvl):
     if lvl <= 1000:
         level = 1
@@ -275,7 +331,8 @@ def createBFtable(hashName):
             
             #BruteForce Table. Start=one char for client to start on. charset full charset.
             #status can be incomplete, inprogress, completed
-            cur.execute("DROP TABLE IF EXISTS %s" % tableName)
+            #commented this out to preserv database across starts.
+            #cur.execute("DROP TABLE IF EXISTS %s" % tableName)
             cur.execute('''CREATE TABLE IF NOT EXISTS %s
                          (start text, charset text, status text)''' % tableName)    
 
@@ -386,8 +443,6 @@ def getGPUSettings(gpuType, hashName):
             conn.close()
 
 def getProgram(system, bits, gpuType):
-    print "in getProgram()"
-    print system, bits, gpuType
     if system == 'Windows':
         if bits == "32bit":
             if gpuType == "ocl":

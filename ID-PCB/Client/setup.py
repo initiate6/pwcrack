@@ -108,11 +108,6 @@ def winGetCPUinfo():
 
 #Get GPU info on Windows computers.
 def winGetGPUinfo():
-    #GPUinfo = []
-    #gpuDesc = ''
-    #amdCatalystVer = ''
-    #gpuMem = ''
-    #nvDriverVer = ''
     try:
         hHardwareReg = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "HARDWARE")
         hDeviceMapReg = _winreg.OpenKey(hHardwareReg, "DEVICEMAP")
@@ -145,11 +140,10 @@ def winGetGPUinfo():
                         
                             #check if its a Nvidia card and if so return detailed info.
                             elif re.search('nvidia', str(VideoCardDescription)) != None:
-                                gpuDesc(VideoCardDescription)
+                                gpuDesc = str(VideoCardDescription)
                                 nvDriverVer = _winreg.QueryValueEx(hVideoCardReg, "DriverVersion")[0]
-                                GPUinfo.append(nvDriverVer)
                                 VideoCardMemorySize = _winreg.QueryValueEx(hVideoCardReg,"HardwareInformation.MemorySize")[0]
-                                gpuMem(VideoCardMemorySize / 1024 / 1024)
+                                gpuMem = str(VideoCardMemorySize / 1024 / 1024)
                                 gpuType = "cuda"
                                 done = True
 
@@ -416,7 +410,7 @@ def linGetGPUinfo():
         amddriveroutput = cut_process.communicate()[0] 
         amdDriver = float(amddriveroutput.split()[0])
         if amdDriver == 1084.4:
-            return str(amdDriver)
+            return '13.1'
         else:
             return None
             

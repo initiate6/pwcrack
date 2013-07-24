@@ -47,7 +47,6 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
     from async_subprocess import AsyncPopen, PIPE
 
     def ircmsg(ircCMD, channel, msg):
-        print '%s #%s %s \r\n' % (ircCMD, channel, msg)
         irc.send('%s #%s %s \r\n' % (ircCMD, channel, msg))
     def join(channel):
         irc.send('JOIN #%s \r\n' % channel)
@@ -125,9 +124,9 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                             stderr=PIPE
                             )
 	retcode = process.poll()
-	print "first retcode: %s" % retcode
+	
 	while retcode == None:
-            time.sleep(5) #in seconds
+            time.sleep(60) #in seconds
 	    stdoutdata, stderrdata = process.communicate(statusKey)
 	    if stderrdata:
                 print stderrdata
@@ -138,7 +137,6 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                     if line:
                         if re.search('Speed|Recovered|Progress', line):
                             ircmsg('PRIVMSG', chan1, line)
-                #print stdoutdata
 		
 	    #Check if Saturday 8/3/2013 if so Check hour >= 23:35 to kill process and upload found files and exit. 
             date = dt.date.today().isoformat()
@@ -161,10 +159,16 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
                 pass
             
 	    retcode = process.poll()
-
-	#upload found file to FTP server.
+        
+	#Get found count and upload found file to FTP server.
         if os.path.isfile(foundfile):
+            foundCount = getFoundCount(foundfile)
             ftpUpload(foundfile, system)
+        else:
+            foundCount = 0
+            
+        trackData = '!TRACK.'+nick+'.completed.'+foundCount
+	ircmsg('PRIVMSG', chan1, trackData)
 	
 	return True 
 
@@ -202,9 +206,11 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
             if cmdStatus:
                 msg1 = '!update.'+nick+'.'+'ready'+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
                 ircmsg('PRIVMSG', chan1, msg1)
+                ircmsg('PRIVMSG', chan, msg1)
             else:
                 msg2 = '!update.'+nick+'.'+'error'+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
                 ircmsg('PRIVMSG', chan1, msg2)
+                ircmsg('PRIVMSG', chan, msg2)
 
             
         if data.find('!GET') != -1:
@@ -216,6 +222,12 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
             output = '!'.join(data.split('!')[2:])
             filename = '.'.join(output.split('.')[1:]).strip('\r\n').strip('\\').strip('/')
             ftpUpload(filename, system)
+
+        if data.find('!RESET') != -1:
+            state = 'standby'
+            msg = '!register.'+nick+'.'+state+'.'+system+'.'+bits+'.'+str(threads)+'.'+gpu+'.'+password+'.'+email
+            ircmsg('PRIVMSG', chan, msg)
+            
             
         print data
 
@@ -298,5 +310,13 @@ def decompressit(zipFilename, system):
         return True
     else:
         print "something went wrong decompressing %s" % zipFilename
-        
+
+def getFoundCount(foundfile):
+    with open(foundfile, 'r') as ff:
+        fileData = ff.readlines()
+
+    linecount = len(fileData)
+    return linecount
+
+    
 main()
