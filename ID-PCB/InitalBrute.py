@@ -15,8 +15,8 @@ def main():
 
     def controller():
         #how many clients do you want working on this program and power level.
-        clients = 1
-        lPowerLvl = 1  #1-11  1 being crappy and 11 being really good.
+        clients = 2
+        lPowerLvl = 7  #1-11  1 being crappy and 11 being really good.
         HPowerLvl = 11
 
         users = {}
@@ -39,7 +39,7 @@ def main():
                 users[client].append(program)
             
             while True:
-                data = irc.recv(2048)
+                data = irc.recv(1024)
                 print data
 
                 if data.find('PING') != -1:
@@ -84,7 +84,7 @@ def main():
     network = 'irc.init6.me'
     chan = 'pwcrack'
     port = 16667
-    nick = 'InitalBrute2'
+    nick = 'InitalBrute'
 
 
     socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -259,18 +259,16 @@ def trackClient(clientID, command):
             conn.close()
             
 def updateTrackClient(clientID, status, foundCount):
-
     try:
-            
+
         conn = sqlite3.connect('pwcrack.db')
 
         with conn:
 
             cur = conn.cursor()
-         
-            cur.execute("UPDATE INTO completed SET completed=?, found=? WHERE clientID=? AND completed='working'", (status, foundCount, clientID))
-                        
-            
+
+            cur.execute("UPDATE completed SET status=?,foundCount=? WHERE clientID=? AND status='working'", (status, foundCount, clientID))
+
 
     except sqlite3.Error, e:
         print "Error updating completed %s:" % e.args[0]
@@ -278,7 +276,8 @@ def updateTrackClient(clientID, status, foundCount):
 
     finally:
         if conn:
-            conn.close()                
+            conn.close()
+
 def checkPowerlvl(lvl, lPowerLvl, HPowerLvl):
     if lvl <= 1000:
         level = 1
@@ -321,7 +320,7 @@ def createBFtable(hashName):
 
     bftable = []
     for char in charset1:
-        bftable.append( (char, charset, 'incomplete') )
+        bftable.append( ('\\'+char, charset, 'incomplete') )
         
     try:
         conn = sqlite3.connect('BFTable.db')

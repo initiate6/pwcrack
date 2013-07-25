@@ -83,7 +83,7 @@ def createDB():
     #create a table completed. track all clients and the command they excuted and if it finished or cutoff.
     #Add support down the line for how many recoverd. 
     cur.execute('''CREATE TABLE IF NOT EXISTS completed
-                 (clientID text, completed text, command text, foundCount text)''')
+                 (clientID text, status text, command text, foundCount text)''')
 
   
     conn.commit()
