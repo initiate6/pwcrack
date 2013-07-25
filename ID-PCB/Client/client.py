@@ -167,7 +167,7 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
         else:
             foundCount = 0
             
-        trackData = '!TRACK.'+nick+'.completed.'+foundCount
+        trackData = '!TRACK.'+nick+'.completed.'+str(foundCount)
 	ircmsg('PRIVMSG', chan1, trackData)
 	
 	return True 
