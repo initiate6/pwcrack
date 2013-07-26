@@ -320,7 +320,7 @@ def createBFtable(hashName):
 
     bftable = []
     for char in charset1:
-        bftable.append( ('\\'+char, charset, 'incomplete') )
+        bftable.append( (char, charset, 'incomplete') )
         
     try:
         conn = sqlite3.connect('BFTable.db')
@@ -333,8 +333,11 @@ def createBFtable(hashName):
             #commented this out to preserv database across starts.
             #cur.execute("DROP TABLE IF EXISTS %s" % tableName)
             cur.execute('''CREATE TABLE IF NOT EXISTS %s
-                         (start text, charset text, status text)''' % tableName)    
+                         (start text, charset text, status text)''' % tableName)
 
+            #Check to see if table already exist if not fill table if does skip. This is why you are getting dups.
+            #result = cur.execute("SELECT 1 FROM %s" % tableName )
+            #print result
             cur.executemany("INSERT INTO "+tableName+" VALUES(?, ?, ?)", bftable)
 
     except sqlite3.Error, e:
