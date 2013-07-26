@@ -17,8 +17,8 @@ if system == 'Linux':
 
 def main():
     
-    #email = raw_input("What is your e-mail address incase your client disconnects? ")
-    email = "init6@init6.me"
+    email = raw_input("What is your e-mail address incase your client disconnects? ")
+    #email = "init6@init6.me"
     
     if system == 'Windows':
         bits = checkBits()

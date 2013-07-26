@@ -387,7 +387,7 @@ def bfupdate(hashName, bfstart, status):
             rows = cur.fetchall()
 
             for row in rows:
-                if re.match(bfstart,row[0]):
+                if re.match(re.escape(bfstart),row[0]):
                     cur.execute("UPDATE "+tableName+" SET status=? WHERE start=?",(status, bfstart))
 
                     conn.commit()

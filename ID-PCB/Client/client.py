@@ -216,12 +216,16 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
         if data.find('!GET') != -1:
             output = '!'.join(data.split('!')[2:])
             filename = '.'.join(output.split('.')[1:]).strip('\r\n')
-            ftpDownload(filename, system)
+            if ftpDownload(filename, system):
+                ftpdownmsg = "%s was downloaded" % filename
+                ircmsg('PRIVMSG', chan, ftpdownmsg)
                 
         if data.find('!PUSH') != -1:
             output = '!'.join(data.split('!')[2:])
             filename = '.'.join(output.split('.')[1:]).strip('\r\n').strip('\\').strip('/')
-            ftpUpload(filename, system)
+            if ftpUpload(filename, system):
+                ftpupmsg = "%s was uploaded" % filename
+                ircmsg('PRIVMSG', chan, ftpupmsg)
 
         if data.find('!RESET') != -1:
             state = 'standby'
@@ -251,6 +255,7 @@ def ftpUpload(filename, system):
         ftps.storbinary('STOR '+zipFilename, local_file)
 
         print "file %s has been uploaded." % zipFilename
+        return True 
     
 def ftpDownload(filename, system):
     from ftplib import FTP_TLS
@@ -275,6 +280,7 @@ def ftpDownload(filename, system):
         status = decompressit(local_filename, system)
         if status:
             print "file %s hash been downloaded." % local_filename
+    return True
     
 
 def compressit(filename, system):
