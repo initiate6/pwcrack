@@ -290,32 +290,72 @@ def compressit(filename, system):
 
     if system == 'Windows':
         args = '7za.exe', 'a', zipFilename, filename
+    	compressFile = Popen(args, stdout=PIPE)
+    	output = compressFile.communicate()[0]
+
+    	if re.search("Everything is Ok", output):
+            return zipFilename
+    	else:
+            print "something went wrong compressing %s" % filenam
+
+
+
     elif system == 'Linux':
-        args = './7za', 'a', zipFilename, filename
+	try:
+	    args = './7za', 'a', zipFilename, filename
 
-    compressFile = Popen(args, stdout=PIPE)
-    output = compressFile.communicate()[0]
+    	    compressFile = Popen(args, stdout=PIPE)
+    	    output = compressFile.communicate()[0]
 
-    if re.search("Everything is Ok", output):
-        return zipFilename
-    else:
-        print "something went wrong compressing %s" % filename
+    	    if re.search("Everything is Ok", output):
+                return zipFilename
+    	    else:
+                print "something went wrong compressing %s" % filename
+	except:
+	    args = '7z', 'a', zipFilename, filename
+
+    	    compressFile = Popen(args, stdout=PIPE)
+    	    output = compressFile.communicate()[0]
+
+    	    if re.search("Everything is Ok", output):
+                return zipFilename
+    	    else:
+                print "something went wrong compressing %s" % filename
+    
         
 def decompressit(zipFilename, system):
     from subprocess import Popen, PIPE
 
     if system == 'Windows':
         args = '7za.exe', 'x', '-y', zipFilename
-    if system == 'Linux':
-        args = './7za', 'x', '-y', zipFilename
-        
-    decompressFile = Popen(args, stdout=PIPE)
-    output = decompressFile.communicate()[0]
+    	decompressFile = Popen(args, stdout=PIPE)
+    	output = decompressFile.communicate()[0]
     
-    if re.search("Everything is Ok", output):
-        return True
-    else:
-        print "something went wrong decompressing %s" % zipFilename
+    	if re.search("Everything is Ok", output):
+            return True
+    	else:
+            print "something went wrong decompressing %s" % zipFilename
+
+    if system == 'Linux':
+	try:
+	    args = './7za', 'x', '-y', zipFilename
+    	    decompressFile = Popen(args, stdout=PIPE)
+    	    output = decompressFile.communicate()[0]
+    
+    	    if re.search("Everything is Ok", output):
+        	return True
+    	    else:
+        	print "something went wrong decompressing %s" % zipFilename
+	except:
+	    args = '7z', 'x', '-y', zipFilename
+    	    decompressFile = Popen(args, stdout=PIPE)
+    	    output = decompressFile.communicate()[0]
+    
+    	    if re.search("Everything is Ok", output):
+        	return True
+    	    else:
+        	print "something went wrong decompressing %s" % zipFilename
+
 
 def getFoundCount(foundfile):
     with open(foundfile, 'r') as ff:
