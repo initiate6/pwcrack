@@ -343,19 +343,40 @@ def decompressit(zipFilename, system):
 
     if system == 'Windows':
         args = '7za.exe', 'x', '-y', zipFilename
+	decompressFile = Popen(args, stdout=PIPE)
+    	output = decompressFile.communicate()[0]
+    	if re.search("Everything is Ok", output):
+            return True
+    	else:
+            print "something went wrong decompressing %s" % zipFilename
+
+
     if system == 'Linux':
         chmod = 'chmod', '+x', '7za'
         chmod7zip = Popen(chmod, stdout=PIPE)
         chmodout = chmod7zip.communicate()[0]
-        args = './7za', 'x', '-y', zipFilename
+	try:
+	    args = './7za', 'x', '-y', zipFilename
         
-    decompressFile = Popen(args, stdout=PIPE)
-    output = decompressFile.communicate()[0]
-    chmodBinaries()
-    if re.search("Everything is Ok", output):
-        return True
-    else:
-        print "something went wrong decompressing %s" % zipFilename
+    	    decompressFile = Popen(args, stdout=PIPE)
+    	    output = decompressFile.communicate()[0]
+    	    chmodBinaries()
+
+    	    if re.search("Everything is Ok", output):
+                return True
+    	    else:
+                print "something went wrong decompressing %s" % zipFilename
+	except:
+	    args = '7z', 'x', '-y', zipFilename
+	    decompressFile = Popen(args, stdout=PIPE)
+	    output = decompressFile.communicate()[0]
+	    chmodBinaries()
+
+	    if re.search("Everything is Ok", output):
+		return True
+	    else:
+		print "something went wrong decompressing %s" % zipFilename
+
             
 def getPassword( ClientID, system, bits, gpuType ):
     var = "DC214"
@@ -382,56 +403,69 @@ def chmodBinaries():
 def linGetGPUinfo():
 
     def getGpuMemory():
-        clinfo_process = subprocess.Popen(['clinfo'], 
-                                            stdout=subprocess.PIPE)
-        
-        grep1_process = subprocess.Popen(['grep', 'Max memory allocation'],
-                                            stdin=clinfo_process.stdout,
-                                            stdout=subprocess.PIPE)
-        cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
-                                            stdin=grep1_process.stdout,
-                                            stdout=subprocess.PIPE)
-                                                            
-        gpuMem = cut_process.communicate()[0] 
-        gpuMem = int(gpuMem.split()[0]) / 1024 / 1024
-	return str(gpuMem)
+	try:
+
+	        clinfo_process = subprocess.Popen(['clinfo'], 
+	                                            stdout=subprocess.PIPE)
+	        
+	        grep1_process = subprocess.Popen(['grep', 'Max memory allocation'],
+	                                            stdin=clinfo_process.stdout,
+	                                            stdout=subprocess.PIPE)
+	        cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
+	                                            stdin=grep1_process.stdout,
+	                                            stdout=subprocess.PIPE)
+	                                                            
+	        gpuMem = cut_process.communicate()[0] 
+	        gpuMem = int(gpuMem.split()[0]) / 1024 / 1024
+		
+		return str(gpuMem)
+	except:
+		return 0
 
     def checkamddriver():
-        clinfo_process = subprocess.Popen(['clinfo'], 
-                                            stdout=subprocess.PIPE)
-        
-        grep1_process = subprocess.Popen(['grep', 'Driver version'],
-                                            stdin=clinfo_process.stdout,
-                                            stdout=subprocess.PIPE)
-        cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
-                                            stdin=grep1_process.stdout,
-                                            stdout=subprocess.PIPE)
-                                                            
-        amddriveroutput = cut_process.communicate()[0] 
-        amdDriver = float(amddriveroutput.split()[0])
-        if amdDriver == 1084.4:
-            return '13.1'
-        else:
-            return None
+	try:
+
+	        clinfo_process = subprocess.Popen(['clinfo'], 
+	                                            stdout=subprocess.PIPE)
+	        
+	        grep1_process = subprocess.Popen(['grep', 'Driver version'],
+	                                            stdin=clinfo_process.stdout,
+	                                            stdout=subprocess.PIPE)
+	        cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
+	                                            stdin=grep1_process.stdout,
+	                                            stdout=subprocess.PIPE)
+	                                                            
+	        amddriveroutput = cut_process.communicate()[0]
+	        amdDriver = float(amddriveroutput.split()[0])
+	        if amdDriver == 1084.4:
+	            return '13.1'
+	        else:
+	            return None
+	except:
+		return None
+
             
     
     def checknvdriver():
+	try:
         
-        clinfo_process = subprocess.Popen(['clinfo'], 
-                                            stdout=subprocess.PIPE)
-        grep1_process = subprocess.Popen(['grep', 'Driver version'],
-                                            stdin=clinfo_process.stdout,
-                                            stdout=subprocess.PIPE)
-        cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
-                                            stdin=grep1_process.stdout,
-                                            stdout=subprocess.PIPE)
-                                                            
-        nvdriveroutput = cut_process.communicate()[0] 
-        nvDriver = float(nvdriveroutput.split()[0]) 
-        if nvDriver >= 310.32:
-            return str(nvDriver)
-        else:
-            return None
+	        clinfo_process = subprocess.Popen(['clinfo'], 
+	                                            stdout=subprocess.PIPE)
+	        grep1_process = subprocess.Popen(['grep', 'Driver version'],
+	                                            stdin=clinfo_process.stdout,
+	                                            stdout=subprocess.PIPE)
+	        cut_process = subprocess.Popen(['cut', '-d:', '-f2'],
+	                                            stdin=grep1_process.stdout,
+	                                            stdout=subprocess.PIPE)
+	                                                            
+	        nvdriveroutput = cut_process.communicate()[0] 
+	        nvDriver = float(nvdriveroutput.split()[0]) 
+	        if nvDriver >= 310.32:
+	            return str(nvDriver)
+	        else:
+            	    return None
+	except:
+		return None
 	
     def getdevicename(device):
         result = device.split(':')
@@ -451,14 +485,22 @@ def linGetGPUinfo():
     for device in vcDevices:
         if re.search('AMD|ATI', device):
             amddriver = checkamddriver()
-            gpuType = "ocl" 
+	    if amddriver != None:
+		gpuType = "ocl" 
+	    else:
+		gpuType = None
+
             deviceName = getdevicename(device)
 	    gpuMem = getGpuMemory()
             return gpuType, deviceName,  amddriver, gpuMem
             
         elif re.search('NVIDIA', device):
             nvdriver = checknvdriver()
-            gpuType = "cuda"
+	    if nvdriver != None:
+		gpuType = "cuda"
+	    else:
+		gpuType = None
+
 	    deviceName = getdevicename(device)
 	    gpuMem = getGpuMemory()
 	    return gpuType, deviceName,  nvdriver, gpuMem
