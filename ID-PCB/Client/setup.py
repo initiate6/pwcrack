@@ -28,7 +28,6 @@ def main():
         ClientID = getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ramInfo )
         password = getPassword( ClientID, system, bits, gpuType )
         writeit(ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, password, email)
-        #downloads don't work because I haven't uploaded all the packages yet
 	download(ClientID, system, bits, gpuType)
         
     if system == 'Linux':
@@ -39,7 +38,6 @@ def main():
 	ClientID = getClientID( system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, gpuMem, ramInfo )
         password = getPassword( ClientID, system, bits, gpuType )
 	writeit(ClientID, system, bits, cpuInfo, gpuType, gpuDesc, gpuDriver, ramInfo, password, email)
-	#downloads don't work because I haven't uploaded all the packages yet
 	download(ClientID, system, bits, gpuType)
 	      
 

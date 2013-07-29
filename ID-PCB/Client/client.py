@@ -5,6 +5,7 @@
 import socket, string, ssl
 import urllib, re, os
 import shlex
+import hashlib
 
 def main():
      
@@ -66,9 +67,20 @@ def connect(network, nick, chan, chan1, port, system, bits, threads, gpu, passwo
 	#split up string into arguments.
 	args = shlex.split(cmdline)
         statusKey = '\n'
-
+        whitelist = ["oclHashcat-plus32.exe", "cudaHashcat-Plus32.exe", "oclHashcat-plus64.exe", "cudaHashcat-plus64.exe" \
+                     "./oclHashcat-plus32.bin", "./cudaHashcat-Plus32.bin", "./oclHashcat-plus64.bin", "./cudaHashcat-plus64.bin" \
+                     "hashcat-cli64.exe", "hashcat-cli32.exe", "./hashcat-cli32.bin", "./hashcat-cli64.bin"]
+        if args[0] in whitelist:
+            if checkhash(args[0]):
+                pass
+            else:
+                print "bad man  is after you"
+                exit()
+        else:
+            exit()
         #Get the file name for the found passwords, and change the status key to 's' if gpu based.
         for arg in args:
+            
             if re.search('found', arg):
                 foundfile = arg
             if re.search('plus', arg):
@@ -364,5 +376,12 @@ def getFoundCount(foundfile):
     linecount = len(fileData)
     return linecount
 
+def checkhash(fname):
+    fname = fname.strip('./')
+    mdfsum = (fname, hashlib.md5(open(fname, 'rb').read()).digest())
+    mdf = mdfsum[1]
+    pwcrack.init6.me/md5/(fname)
     
+    
+
 main()
