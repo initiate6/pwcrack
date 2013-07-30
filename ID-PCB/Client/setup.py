@@ -144,6 +144,13 @@ def winGetGPUinfo():
                                 gpuMem = str(VideoCardMemorySize / 1024 / 1024)
                                 gpuType = "cuda"
                                 done = True
+                                
+                            else:
+                                gpuDesc = None
+                                gpuType = None
+
+
+                                
 
             #breaks to step out of for loops once done.                                        
                     if done == True:
@@ -154,14 +161,14 @@ def winGetGPUinfo():
                 break
             
         #checks if gpu driver is good and return info
-        if re.search('AMD|ATI', gpuDesc):
+        if re.search('AMD|ATI', str(gpuDesc)):
             if amdCatalystVer == '13.1':
                 return gpuType, gpuDesc, amdCatalystVer, VideoCardMemorySize
             else:
                 print "Your GPU driver for  %s is %s and needs to be upgraded or downgraded to match oclhashcat requirements 13.1" % ( gpuDesc, amdCatalystVer )
                 return None, None, None, None
             
-        elif re.search('nvidia', gpuDesc):
+        elif re.search('nvidia', str(gpuDesc)):
             if float(nvDriverVer) >= float(310.02):
                 return gpuType, gpuDesc, nvDriverVer, VideoCardMemorySize
             else:
