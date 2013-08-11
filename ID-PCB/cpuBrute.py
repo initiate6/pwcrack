@@ -32,14 +32,14 @@ def main():
 
     def controller():
         #how many clients do you want working on this program and power level.
-        clients = 5
-        lPowerLvl = 4  #1-11  1 being crappy and 11 being really good.
+        clients = 3
+        lPowerLvl = 7  #1-11  1 being crappy and 11 being really good.
         HPowerLvl = 11
 
         users = {}
 
         #, 'raw-md4', 'mysql-sha1', 'ntlm', 'nsldap', 'raw-md5u'
-        hashes = [ 'des-unix', 'nsldaps' ]
+        hashes = [ 'raw-md5', 'raw-sha1' ]
         for hashName in hashes:
             createBFtable(hashName)
         
@@ -139,9 +139,9 @@ def buildcmd(user, hashName):
     hashFile, mcode, nvAccel, nvLoops, amdAccel, amdLoops = '', '', '', '', '', ''
     
     #change these options for different rounds.
-    CL = 'CL1-9'
-    staticOptions.append('-i --increment-min=1 --increment-max=9')
-    markovThreshold = '-t 100'
+    CL = 'CL1-7'
+    staticOptions.append('-i --increment-min=1 --increment-max=7')
+    markovThreshold = '-t 0'
     
     clientID = user[0]
     state = user[1]

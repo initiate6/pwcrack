@@ -33,15 +33,15 @@ def main():
     def controller():
         #how many clients do you want working on this program and power level.
         clients = 5
-        lPowerLvl = 4  #1-11  1 being crappy and 11 being really good.
+        lPowerLvl = 1  #1-11  1 being crappy and 11 being really good.
         HPowerLvl = 11
 
         users = {}
 
         #, 'raw-md4', 'mysql-sha1', 'ntlm', 'nsldap', 'raw-md5u'
-        hashes = [ 'des-unix', 'nsldaps' ]
+        hashes = [ 'nsldaps', 'mysql-sha1.hash' ]
         for hashName in hashes:
-            createBFtable(hashName)
+            createRuleTable(hashName)
         
             for client in range(clients):
 
@@ -56,7 +56,7 @@ def main():
                 users[client].append(program)
             
             while True:
-                data = irc.recv(1024)
+                data = irc.recv(768)
                 print data
 
                 if data.find('PING') != -1:
@@ -101,7 +101,7 @@ def main():
     network = 'irc.init6.me'
     chan = 'pwcrack'
     port = 16667
-    nick = 'InitalBrute'
+    nick = 'GpuRules'
 
 
     socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -132,16 +132,10 @@ def main():
 def buildcmd(user, hashName):
     command = []
     gpuSettings = []
-    attackmode = '-a 3'
+    attackmode = '-a 0'
     staticOptions = ['--remove', '--outfile-format=3', '--disable-potfile']
-    markovSettings = '--markov-hcstat=hashcat.hcstat'
 
     hashFile, mcode, nvAccel, nvLoops, amdAccel, amdLoops = '', '', '', '', '', ''
-    
-    #change these options for different rounds.
-    CL = 'CL1-9'
-    staticOptions.append('-i --increment-min=1 --increment-max=9')
-    markovThreshold = '-t 100'
     
     clientID = user[0]
     state = user[1]
@@ -159,23 +153,115 @@ def buildcmd(user, hashName):
         hashFile, mcode, nvAccel, nvLoops = getGPUSettings(gpuType, hashName)
         gpuSettings.append(nvAccel)
         gpuSettings.append(nvLoops)
-    bfstart, bruteforce = getBruteForce(hashName)
-    outfile = getOutFile(clientID, hashName, bfstart, CL)
+    
+    ruleCMD = getRules(hashName)
+
+    outfile = getOutFile(clientID, hashName)
     
     command.append(program)
     command.append(mcode)
     command.append(attackmode)
     for option in staticOptions:
         command.append(option)
-    command.append(markovSettings)
-    command.append(markovThreshold)
     command.append(outfile)
     for gpuOption in gpuSettings:
         command.append(gpuOption)
     command.append(hashFile)
-    command.append(bruteforce)
+    
+    command.append(ruleCMD)
     return clientID, command
 
+def createRuleTable(hashName):
+    hashName = ''.join(hashName.split('-'))
+    tableName = hashName+'ruleTable'
+
+    rules = ['best64.rule', 'best80.rule', 'Hash-IT_Insert_Space.rule', \
+		'Hash-IT_Most_Common_Suffix.rule', 'Hash-IT_Most_Common_Prefix.rule', \
+		'insert_overwrite.rule', 'npass.rule', 'passwordspro.rule', 'perfect.rule', \
+		'PrependNumSpecial-3.rule']
+    
+    wordlist = 'wordlist/rockyou.txt'
+
+    ruletable = []
+    for rule in rules:
+        ruletable.append( (rule, wordlist, 'incomplete') )
+        
+    try:
+        conn = sqlite3.connect('RuleTable.db')
+
+        with conn:
+            cur = conn.cursor()
+            
+            #BruteForce Table. Start=one char for client to start on. charset full charset.
+            #status can be incomplete, inprogress, completed
+            #commented this out to preserv database across starts.
+            #cur.execute("DROP TABLE IF EXISTS %s" % tableName)
+            cur.execute('''CREATE TABLE IF NOT EXISTS %s
+                         (rule text, wordlist text, status text)''' % tableName)    
+
+            cur.executemany("INSERT INTO "+tableName+" VALUES(?, ?, ?)", ruletable)
+
+    except sqlite3.Error, e:
+        print "Error create rule table %s:" % e.args[0]
+        sys.exit(1)
+
+    finally:
+        if conn:
+            conn.close()
+            
+def getRules(hashName):
+    hashName = ''.join(hashName.split('-'))
+    tableName = hashName+'ruleTable'
+    
+    try:
+        conn = sqlite3.connect('RuleTable.db')
+
+        with conn:
+            cur = conn.cursor()
+
+            cur.execute("SELECT * FROM %s" % tableName)
+            rows = cur.fetchall()
+
+            for row in rows:
+                if re.match('incomplete', row[2]):
+                    rule = row[0]
+                    wordlist = row[1]
+                    ruleupdate(hashName, rule, 'inprogress')
+                    ruleCMD = "%s -r rules/%s" % (wordlist, rule)
+                    return ruleCMD
+
+    except sqlite3.Error, e:
+        print "Error get rule %s:" % e.args[0]
+        sys.exit(1)
+
+    finally:
+        if conn:
+            conn.close()
+            
+def ruleupdate(hashName, rule, status):
+    hashName = ''.join(hashName.split('-'))
+    tableName = hashName+'ruleTable'
+    try:
+        conn = sqlite3.connect('RuleTable.db')
+
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM %s" % tableName)
+            rows = cur.fetchall()
+
+            for row in rows:
+                if re.match(re.escape(rule),row[0]):
+                    cur.execute("UPDATE "+tableName+" SET status=? WHERE rule=?",(status, rule))
+
+                    conn.commit()
+
+    except sqlite3.Error, e:
+        print "Error ruleupdate %s:" % e.args[0]
+        sys.exit(1)
+
+    finally:
+        if conn:
+            conn.close()
 
 def getClientInfo(lPowerLvl, HPowerLvl):
     try:
@@ -323,104 +409,13 @@ def checkPowerlvl(lvl, lPowerLvl, HPowerLvl):
         return True
     else:
         return None
-    
-
-def createBFtable(hashName):
-    hashName = ''.join(hashName.split('-'))
-    tableName = hashName+'bftable'
-    
-    charset1 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /"
-    #charset2 = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~`!@#$%^&*()_-+=[]{}\\|<>\"\':;,.\? /\ñ"
-    
-    charset = 'charset1'
-    #charset = 'charset2'
-
-    bftable = []
-    for char in charset1:
-        bftable.append( (char, charset, 'incomplete') )
-        
-    try:
-        conn = sqlite3.connect('BFTable.db')
-
-        with conn:
-            cur = conn.cursor()
-            
-            #BruteForce Table. Start=one char for client to start on. charset full charset.
-            #status can be incomplete, inprogress, completed
-            #commented this out to preserv database across starts.
-            #cur.execute("DROP TABLE IF EXISTS %s" % tableName)
-            cur.execute('''CREATE TABLE IF NOT EXISTS %s
-                         (start text, charset text, status text)''' % tableName)    
-
-            cur.executemany("INSERT INTO "+tableName+" VALUES(?, ?, ?)", bftable)
-
-    except sqlite3.Error, e:
-        print "Error create bf table %s:" % e.args[0]
-        sys.exit(1)
-
-    finally:
-        if conn:
-            conn.close()
-            
-def getBruteForce(hashName):
-    hashName = ''.join(hashName.split('-'))
-    tableName = hashName+'bftable'
-    
-    try:
-        conn = sqlite3.connect('BFTable.db')
-
-        with conn:
-            cur = conn.cursor()
-
-            cur.execute("SELECT * FROM %s" % tableName)
-            rows = cur.fetchall()
-
-            for row in rows:
-                if re.match('incomplete', row[2]):
-                    bfstart = row[0]
-                    charset = row[1]
-                    bfupdate(hashName, bfstart, 'inprogress')
-                    bfCMD = "-1 %s -2 %s ?1?2?2?2?2?2?2?2?2" % (bfstart, charset)
-                    return bfstart, bfCMD
-                
-                
-    except sqlite3.Error, e:
-        print "Error getbf %s:" % e.args[0]
-        sys.exit(1)
-
-    finally:
-        if conn:
-            conn.close()
-            
-def bfupdate(hashName, bfstart, status):
-    hashName = ''.join(hashName.split('-'))
-    tableName = hashName+'bftable'
-    try:
-        conn = sqlite3.connect('BFTable.db')
-
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM %s" % tableName)
-            rows = cur.fetchall()
-
-            for row in rows:
-                if re.match(re.escape(bfstart),row[0]):
-                    cur.execute("UPDATE "+tableName+" SET status=? WHERE start=?",(status, bfstart))
-
-                    conn.commit()
-    except sqlite3.Error, e:
-        print "Error bfupdate %s:" % e.args[0]
-        sys.exit(1)
-
-    finally:
-        if conn:
-            conn.close()
-
 
     
-def getOutFile(clientID, hashName, bfstart, CL):
-    #cmd clientID bfstart HashName attack mode
-    outfile = "-o %s.%s.%s.%s.a3.found" % (clientID, bfstart, hashName, CL)
+def getOutFile(clientID, hashName):
+    import random
+    rand = random.randint(0000,9999)
+
+    outfile = "-o %s.%s.%s..a0.found" % (clientID, hashName, str(rand).rjust(4, '0'))
     return outfile
 
     

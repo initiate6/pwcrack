@@ -1,5 +1,22 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
+##
+#Copyright 2013 (Jason Wheeler INIT6@INIT6.me) and DC214.org
+#
+#This file is part of ID-PCB (IRC distributed password cracking bot.)
+#
+#    ID-PCB is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License.
+#
+#    ID-PCB is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    To receive a copy of the GNU General Public License
+#    see <http://www.gnu.org/licenses/>.
+##
 
 import socket, string, time, ssl
 import urllib, re, os, sqlite3, sys
